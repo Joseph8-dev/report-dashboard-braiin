@@ -1,9 +1,7 @@
 <template>
   <VaCard>
     <VaCardTitle>
-      <h1 class="card-title text-tag text-secondary font-bold uppercase">
-        Adjustment Tracker
-      </h1>
+      <h1 class="card-title text-tag text-secondary font-bold uppercase">Adjustment Tracker</h1>
     </VaCardTitle>
 
     <VaCardContent>
@@ -14,9 +12,7 @@
 
       <!-- When data is loaded -->
       <section v-if="!loading && !error && epoch && simplifiedPoints.length">
-        <div class="text-xl font-bold mb-2">
-          Epoch #{{ epoch }}
-        </div>
+        <div class="text-xl font-bold mb-2">Epoch #{{ epoch }}</div>
         <p class="text-xs text-success">
           <VaIcon name="arrow_upward" />
           {{ latestChange }}%
@@ -29,18 +25,12 @@
       </section>
 
       <!-- Loading state -->
-      <div
-        v-else-if="loading"
-        class="flex justify-center items-center h-24 text-secondary text-xs"
-      >
+      <div v-else-if="loading" class="flex justify-center items-center h-24 text-secondary text-xs">
         Loading data...
       </div>
 
       <!-- Error state -->
-      <div
-        v-else-if="error"
-        class="flex justify-center items-center h-24 text-danger text-xs"
-      >
+      <div v-else-if="error" class="flex justify-center items-center h-24 text-danger text-xs">
         ⚠️ Failed to load Adjustment Tracker.
       </div>
     </VaCardContent>
@@ -95,11 +85,11 @@ const latestChange = computed(() => {
 
 // Chart data
 const chartData = computed(() => ({
-  labels: simplifiedPoints.value.map(p => p.x),
+  labels: simplifiedPoints.value.map((p) => p.x),
   datasets: [
     {
       label: 'Adjustment Value',
-      data: simplifiedPoints.value.map(p => p.y),
+      data: simplifiedPoints.value.map((p) => p.y),
       borderColor: '#00E396',
       backgroundColor: 'rgba(0, 227, 150, 0.2)',
       tension: 0.3,

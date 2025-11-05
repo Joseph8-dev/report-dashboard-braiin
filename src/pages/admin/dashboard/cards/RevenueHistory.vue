@@ -3,12 +3,7 @@
     <VaCardTitle class="flex items-start justify-between">
       <h1 class="card-title text-secondary font-bold uppercase">Mining Revenue Report</h1>
       <div class="flex gap-2">
-        <VaSelect
-          v-model="selectedMonth"
-          preset="small"
-          :options="monthsWithCurrentYear"
-          class="w-28"
-        />
+        <VaSelect v-model="selectedMonth" preset="small" :options="monthsWithCurrentYear" class="w-28" />
         <VaButton class="h-2" size="small" preset="primary" @click="exportAsCSV">Export</VaButton>
       </div>
     </VaCardTitle>
@@ -32,13 +27,14 @@
       </section>
 
       <section class="flex flex-col w-full md:w-3/5 lg:w-3/4">
-        <RevenueHistoryChart
-          class="h-56 min-h-56 pt-4"
-          :revenues="chartData"
-        />
+        <RevenueHistoryChart class="h-56 min-h-56 pt-4" :revenues="chartData" />
         <div class="flex justify-between mt-4 text-sm text-secondary px-4">
-          <span>Total USDT: <b>{{ formatMoney(totalEarningsUSD) }}</b></span>
-          <span>Equivalent BTC: <b>{{ totalEarningsBTC.toFixed(5) }} BTC</b></span>
+          <span
+            >Total USDT: <b>{{ formatMoney(totalEarningsUSD) }}</b></span
+          >
+          <span
+            >Equivalent BTC: <b>{{ totalEarningsBTC.toFixed(5) }} BTC</b></span
+          >
         </div>
       </section>
     </VaCardContent>
@@ -60,12 +56,22 @@ interface MergedData {
 
 const barColor = '#3b82f6'
 const months = [
-  'January','February','March','April','May','June',
-  'July','August','September','October','November','December'
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ]
 
 const currentYear = new Date().getFullYear()
-const monthsWithCurrentYear = months.map(m => `${m} ${currentYear}`)
+const monthsWithCurrentYear = months.map((m) => `${m} ${currentYear}`)
 const selectedMonth = ref(monthsWithCurrentYear[new Date().getMonth()])
 
 const chartData = ref<MergedData[]>([])
@@ -88,7 +94,7 @@ async function loadBraiinsData() {
     const [priceRes, revenueRes, poolRes] = await Promise.all([
       fetch('https://dev-sec.app/api/price-stats'),
       fetch('https://dev-sec.app/api/daily-revenue-history?timeframe=1m'),
-      fetch('https://dev-sec.app/api/pool-stats')
+      fetch('https://dev-sec.app/api/pool-stats'),
     ])
 
     const btcPriceData = await priceRes.json()
@@ -98,7 +104,7 @@ async function loadBraiinsData() {
     const poolData = await poolRes.json()
 
     console.log('BTC price:', btcPrice)
-    console.log('Revenue sample:', revenueData?.miners_revenue_sat?.slice(0,3))
+    console.log('Revenue sample:', revenueData?.miners_revenue_sat?.slice(0, 3))
     console.log('Pool stats sample:', poolData?.[0])
 
     const hashrates = poolData[0]?.hashrate_past_week || []
@@ -122,7 +128,6 @@ async function loadBraiinsData() {
     console.log('Total earnings USD:', totalEarningsUSD.value)
     console.log('Total earnings BTC:', totalEarningsBTC.value)
     console.log('Average hashrate PH/s:', averageHashratePH.value)
-
   } catch (err) {
     console.error('❌ Failed to load Braiins data:', err)
   }

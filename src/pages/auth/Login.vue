@@ -1,11 +1,11 @@
 <template>
-  <VaForm 
-    ref="form" 
-    @submit.prevent="submit" 
+  <VaForm
+    ref="form"
     class="max-w-md mx-auto mt-20 p-6 bg-white rounded-2xl shadow-2xl hover:shadow-3xl transition-shadow duration-300"
+    @submit.prevent="submit"
   >
     <h1 class="font-semibold text-4xl mb-6 text-center">Log in</h1>
-    
+
     <VaInput
       v-model="formData.email"
       :rules="[validators.required]"
@@ -44,7 +44,10 @@
     </div>
 
     <div class="flex justify-center">
-      <VaButton class="w-full py-3 font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all" @click="submit">
+      <VaButton
+        class="w-full py-3 font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all"
+        @click="submit"
+      >
         Login
       </VaButton>
     </div>
@@ -103,11 +106,15 @@ body {
 
 /* Enhance card shadow and hover effect */
 .va-form {
-  box-shadow: 0 10px 30px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.3s ease;
 }
 
 .va-form:hover {
-  box-shadow: 0 15px 40px rgba(0,0,0,0.2), 0 6px 16px rgba(0,0,0,0.12);
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.2),
+    0 6px 16px rgba(0, 0, 0, 0.12);
 }
 </style>

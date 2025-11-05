@@ -27,9 +27,12 @@ onMounted(() => {
   if (canvas.value) drawChart()
 })
 
-watch(() => props.revenues, () => {
-  drawChart()
-})
+watch(
+  () => props.revenues,
+  () => {
+    drawChart()
+  },
+)
 
 function drawChart() {
   if (!canvas.value) return
@@ -42,30 +45,30 @@ function drawChart() {
     chartInstance = null
   }
 
-  const revenueValues = props.revenues.map(r => r.revenueUSD)
-  const hashrateValues = props.revenues.map(r => r.hashratePH)
+  const revenueValues = props.revenues.map((r) => r.revenueUSD)
+  const hashrateValues = props.revenues.map((r) => r.hashratePH)
 
   chartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: props.revenues.map(r => r.date),
+      labels: props.revenues.map((r) => r.date),
       datasets: [
         {
-                    label: 'Revenue (USDT)',
+          label: 'Revenue (USDT)',
           type: 'bar',
           data: revenueValues,
           yAxisID: 'y1',
-          backgroundColor: 'rgba(59,130,246,1)',      // solid blue
-          borderColor: 'rgba(59,130,246,1)',          // same as fill to avoid outline contrasts
-          borderWidth: 0,                              // remove border (prevents lighter edges)
+          backgroundColor: 'rgba(59,130,246,1)', // solid blue
+          borderColor: 'rgba(59,130,246,1)', // same as fill to avoid outline contrasts
+          borderWidth: 0, // remove border (prevents lighter edges)
           hoverBackgroundColor: 'rgba(59,130,246,1)', // same on hover (no lighter overlay)
           hoverBorderColor: 'rgba(59,130,246,1)',
           hoverBorderWidth: 0,
-          barPercentage: 0.4,      // narrower bars
+          barPercentage: 0.4, // narrower bars
           categoryPercentage: 0.5, // spacing between bars
           maxBarThickness: 30,
           borderRadius: 4,
-          order: 1                 // draw first
+          order: 1, // draw first
         },
         {
           label: 'Hashrate (PH/s)',
@@ -78,9 +81,9 @@ function drawChart() {
           fill: false,
           tension: 0.3,
           pointRadius: 3,
-          order: 2                 // draw on top
-        }
-      ]
+          order: 2, // draw on top
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -96,10 +99,10 @@ function drawChart() {
               return label.includes('Revenue')
                 ? `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
                 : `${value.toFixed(2)} PH/s`
-            }
-          }
+            },
+          },
         },
-        legend: { position: 'top' }
+        legend: { position: 'top' },
       },
       scales: {
         y1: {
@@ -107,7 +110,7 @@ function drawChart() {
           position: 'left',
           title: { display: true, text: 'Revenue (USDT)', padding: { top: 20, bottom: 0 } },
           beginAtZero: true,
-          stacked: false
+          stacked: false,
         },
         y2: {
           type: 'linear',
@@ -115,19 +118,17 @@ function drawChart() {
           title: { display: true, text: 'Hashrate (PH/s)', padding: { top: 20, bottom: 0 } },
           grid: { drawOnChartArea: false },
           beginAtZero: true,
-          stacked: false
+          stacked: false,
         },
         x: {
           title: { display: true, text: 'Date', padding: { top: 10 } },
           ticks: { maxRotation: 45, minRotation: 0, autoSkip: true },
-          stacked: false
-        }
-      }
-    }
+          stacked: false,
+        },
+      },
+    },
   })
 }
-
-
 </script>
 
 <style scoped>

@@ -16,7 +16,8 @@ const breakpoint = useBreakpoint()
 
 <style scoped>
 /* Optional: ensure full height and background color */
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
 }

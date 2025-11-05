@@ -146,10 +146,7 @@ onMounted(async () => {
     priceStatsMetric.value.changeDirection = 'up'
   }
 
-  await Promise.all([
-    fetchDailyRevenueHistory(btcPrice),
-    fetchTransactionStats(btcPrice),
-  ])
+  await Promise.all([fetchDailyRevenueHistory(btcPrice), fetchTransactionStats(btcPrice)])
 })
 
 // ==================== COMPUTED METRICS ====================

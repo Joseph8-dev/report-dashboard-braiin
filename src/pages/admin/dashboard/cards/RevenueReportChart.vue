@@ -56,14 +56,14 @@ onMounted(() => {
         data: {
           labels: months,
           datasets: [
-          {
-            data: revenues.map(({ earning, expenses }) => (expenses / earning) * 100),
-            backgroundColor: expensesColor,
-            barThickness: BR_THICKNESS,
-            maxBarThickness: 20,   // max width
-            barPercentage: 0.8,    // fraction of category width
-          },
-        ],
+            {
+              data: revenues.map(({ earning, expenses }) => (expenses / earning) * 100),
+              backgroundColor: expensesColor,
+              barThickness: BR_THICKNESS,
+              maxBarThickness: 20, // max width
+              barPercentage: 0.8, // fraction of category width
+            },
+          ],
         },
         options: {
           maintainAspectRatio: false,

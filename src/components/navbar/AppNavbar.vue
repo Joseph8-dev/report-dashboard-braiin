@@ -1,7 +1,6 @@
 <template>
   <VaNavbar class="app-layout-navbar py-2 px-0">
-    <template #left>
-    </template>
+    <template #left> </template>
     <template #right>
       <AppNavbarActions class="app-navbar__actions" :is-mobile="isMobile" />
     </template>

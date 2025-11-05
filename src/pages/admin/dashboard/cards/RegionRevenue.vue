@@ -8,7 +8,7 @@
         class="region-revenue-table"
         :columns="[
           { key: 'name', label: 'Region' },
-          { key: 'blocks', label: 'Blocks Mined', align: 'right' }
+          { key: 'blocks', label: 'Blocks Mined', align: 'right' },
         ]"
         :items="tableData"
       />
@@ -28,15 +28,14 @@ interface CountryAPI {
 const apiData = ref<CountryAPI[]>([])
 
 const tableData = computed(() => {
-  return apiData.value.map(c => {
+  return apiData.value.map((c) => {
     console.log('Table row:', c.label, c.blocks_mined)
     return {
       name: c.label,
-      blocks: c.blocks_mined || 0
+      blocks: c.blocks_mined || 0,
     }
   })
 })
-
 
 onMounted(async () => {
   try {
@@ -48,7 +47,6 @@ onMounted(async () => {
   }
 })
 </script>
-
 
 <style lang="scss" scoped>
 .region-revenue-table {

@@ -14,23 +14,9 @@ import {
   ChartData,
   ScriptableContext,
 } from 'chart.js'
-import {
-  ChoroplethController,
-  ProjectionScale,
-  ColorScale,
-  GeoFeature,
-} from 'chartjs-chart-geo'
+import { ChoroplethController, ProjectionScale, ColorScale, GeoFeature } from 'chartjs-chart-geo'
 
-ChartJS.register(
-  Title,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  ChoroplethController,
-  ProjectionScale,
-  ColorScale,
-  GeoFeature,
-)
+ChartJS.register(Title, Tooltip, Legend, CategoryScale, ChoroplethController, ProjectionScale, ColorScale, GeoFeature)
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 
@@ -57,24 +43,20 @@ watchEffect(() => {
 
   // Assign base colors directly to each feature
   dataset.data.forEach((item) => {
-  const value = item.value
+    const value = item.value
 
-  if (value === 0) {
-    item.feature.properties.backgroundColor = '#dbe6f7' // very pale blue
-  } else if (value < 500) {
-    item.feature.properties.backgroundColor = '#99c2ff' // pale blue
-  } else if (value < 1000) {
-    item.feature.properties.backgroundColor = '#99c2ff' // medium-light blue
-  } else if (value < 2000) {
-    item.feature.properties.backgroundColor = '#4d94ff' // medium blue
-  } else {
-    item.feature.properties.backgroundColor = '#0066ff' // vibrant blue
-  }
-})
-
-
-
-
+    if (value === 0) {
+      item.feature.properties.backgroundColor = '#dbe6f7' // very pale blue
+    } else if (value < 500) {
+      item.feature.properties.backgroundColor = '#99c2ff' // pale blue
+    } else if (value < 1000) {
+      item.feature.properties.backgroundColor = '#99c2ff' // medium-light blue
+    } else if (value < 2000) {
+      item.feature.properties.backgroundColor = '#4d94ff' // medium blue
+    } else {
+      item.feature.properties.backgroundColor = '#0066ff' // vibrant blue
+    }
+  })
 
   new ChartJS(ctx, {
     type: 'choropleth',

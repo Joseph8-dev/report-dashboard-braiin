@@ -6,16 +6,8 @@
     <VaCardContent class="flex-1 flex overflow-hidden relative">
       <VaAspectRatio class="w-full md:min-h-72 overflow-hidden relative flex items-center">
         <!-- Only show map when geoJson AND apiData are loaded -->
-        <Map
-          v-if="geoJson && apiData.length"
-          :data="data"
-          class="dashboard-map flex-1 h-full"
-        />
-        <VaProgressCircle
-          v-else
-          indeterminate
-          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        />
+        <Map v-if="geoJson && apiData.length" :data="data" class="dashboard-map flex-1 h-full" />
+        <VaProgressCircle v-else indeterminate class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
 
         <!-- Overlay Unknown notation -->
         <div
@@ -75,7 +67,7 @@ const getBlocks = (feature: any) => {
   const iso = feature.properties.iso_a2?.toUpperCase()
   if (!iso) return 0
 
-  const country = apiData.value.find(c => {
+  const country = apiData.value.find((c) => {
     const mappedCode = codeMapping[c.code.toLowerCase()] || c.code.toUpperCase()
     return mappedCode === iso
   })
@@ -87,7 +79,7 @@ const getBlocks = (feature: any) => {
 // Compute total Unknown blocks
 const unknownBlocks = computed(() => {
   return apiData.value
-    .filter(c => c.code.toLowerCase() === 'unknown')
+    .filter((c) => c.code.toLowerCase() === 'unknown')
     .reduce((sum, c) => sum + (c.blocks_mined || 0), 0)
 })
 
@@ -95,15 +87,15 @@ const unknownBlocks = computed(() => {
 const data = computed<ChartData<'choropleth', { feature: any; value: number }[], string>>(() => {
   if (!geoJson.value || !apiData.value.length) return { labels: [], datasets: [] }
 
-  const values = geoJson.value.features.map(f => getBlocks(f))
+  const values = geoJson.value.features.map((f) => getBlocks(f))
   const maxValue = Math.max(...values, 1) // avoid divide by zero
 
   return {
-    labels: geoJson.value.features.map(f => f.properties.name),
+    labels: geoJson.value.features.map((f) => f.properties.name),
     datasets: [
       {
         label: 'Countries',
-        data: geoJson.value.features.map(f => {
+        data: geoJson.value.features.map((f) => {
           const value = getBlocks(f)
           const intensity = value / maxValue
           const color = `rgba(0, 0, 255, ${Math.max(0.2, intensity)})`

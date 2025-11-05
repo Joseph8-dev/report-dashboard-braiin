@@ -40,11 +40,10 @@
 
     <NotificationDropdown class="app-navbar-actions__item" />
     -->
-    
+
     <ProfileDropdown class="app-navbar-actions__item app-navbar-actions__item--profile mr-1" />
   </div>
 </template>
-
 
 <script lang="ts" setup>
 import ProfileDropdown from './dropdowns/ProfileDropdown.vue'

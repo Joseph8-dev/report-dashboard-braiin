@@ -15,10 +15,7 @@
         :style="{ '--hover-color': hoverColor }"
       >
         <VaList>
-          <VaListItem
-            class="menu-item px-4 text-base cursor-pointer h-8"
-            @click="logout"
-          >
+          <VaListItem class="menu-item px-4 text-base cursor-pointer h-8" @click="logout">
             <VaIcon name="mso-logout" class="pr-1" color="secondary" />
             {{ t('user.logout') }}
           </VaListItem>
@@ -33,15 +30,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useColors } from 'vuestic-ui'
-import {
-  VaDropdown,
-  VaDropdownContent,
-  VaList,
-  VaListItem,
-  VaButton,
-  VaAvatar,
-  VaIcon,
-} from 'vuestic-ui'
+import { VaDropdown, VaDropdownContent, VaList, VaListItem, VaButton, VaAvatar, VaIcon } from 'vuestic-ui'
 
 const router = useRouter()
 const { t } = useI18n()

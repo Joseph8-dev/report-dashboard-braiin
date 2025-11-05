@@ -1,9 +1,7 @@
 <template>
   <VaCard>
     <VaCardTitle>
-      <h1 class="card-title text-tag text-secondary font-bold uppercase">
-        Latest Blocks Mined
-      </h1>
+      <h1 class="card-title text-tag text-secondary font-bold uppercase">Latest Blocks Mined</h1>
     </VaCardTitle>
 
     <VaCardContent>
@@ -36,12 +34,7 @@
               <td class="p-2">{{ block.block_value_btc?.toFixed(2) ?? '—' }}</td>
               <td class="p-2">${{ block.block_value_usd?.toLocaleString() ?? '—' }}</td>
               <td class="p-2 w-24">
-                <VaChart
-                  :data="getSparklineData(block)"
-                  type="line"
-                  class="h-6"
-                  :options="sparklineOptions"
-                />
+                <VaChart :data="getSparklineData(block)" type="line" class="h-6" :options="sparklineOptions" />
               </td>
             </tr>
           </tbody>
@@ -49,12 +42,7 @@
       </div>
 
       <!-- Loading state -->
-      <div
-        v-else
-        class="flex justify-center items-center h-24 text-secondary text-xs"
-      >
-        Loading latest blocks...
-      </div>
+      <div v-else class="flex justify-center items-center h-24 text-secondary text-xs">Loading latest blocks...</div>
     </VaCardContent>
   </VaCard>
 </template>
@@ -113,7 +101,7 @@ onMounted(async () => {
     const res = await fetch('https://dev-sec.app/api/latest-blocks')
     if (!res.ok) throw new Error('Failed to fetch')
     const data = await res.json()
-    blocks.value = (Array.isArray(data) ? data : []).map(b => ({
+    blocks.value = (Array.isArray(data) ? data : []).map((b) => ({
       ...b,
       last_usd_values: [
         b.block_value_usd * 0.98,
