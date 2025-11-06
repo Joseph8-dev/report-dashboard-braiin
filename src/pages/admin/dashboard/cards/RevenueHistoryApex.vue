@@ -140,7 +140,7 @@ async function loadBraiinsData() {
     chartData.value = revenueRaw.map((item: any) => {
       const date = normalizeDate(item.timestamp)
       const revenueUSD = (Number(item.revenue_sat) / 1e8) * btcPrice
-      const matchPhs = phsRaw.find((p) => p.day === date)
+      const matchPhs = phsRaw.find((p) => normalizeDate(p.day) === date)
       return {
         date,
         revenueUSD,
