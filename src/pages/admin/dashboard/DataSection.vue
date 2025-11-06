@@ -49,7 +49,7 @@ const dailyRevenueMetric = ref<DashboardMetric>({
 
 const priceStatsMetric = ref<DashboardMetric>({
   id: 'priceStats',
-  title: 'Precio BTC',
+  title: 'Precio BTC de Hoy',
   value: 'Cargando...',
   icon: 'mso-currency_bitcoin',
   changeText: '',
