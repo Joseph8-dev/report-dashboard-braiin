@@ -1,10 +1,10 @@
 <template>
   <VaCard class="flex flex-col">
     <VaCardTitle class="flex items-start justify-between">
-      <h1 class="card-title text-secondary font-bold uppercase">Mining Revenue Report (Apex)</h1>
+      <h1 class="card-title text-secondary font-bold uppercase">Informe de Ingresos Minería (Apex)</h1>
       <div class="flex gap-2">
         <VaSelect v-model="selectedPeriod" :options="monthYearOptions" preset="small" class="w-52" teleported />
-        <VaButton size="small" preset="primary" @click="exportAsExcel">Export</VaButton>
+        <VaButton size="small" preset="primary" @click="exportAsExcel"class ="w-32">Exportar</VaButton>
       </div>
     </VaCardTitle>
 
@@ -12,9 +12,9 @@
       <section class="flex flex-col items-start w-full sm:w-1/3 md:w-2/5 lg:w-1/4 gap-4 md:gap-8 pl-4">
         <div>
           <p class="text-xl font-semibold">{{ formatMoney(totalEarningsUSD) }}</p>
-          <p class="whitespace-nowrap mt-2">Total earnings (USDT)</p>
+          <p class="whitespace-nowrap mt-2">Ingresos totales (USDT)</p>
           <p v-if="averagePhs > 0" class="text-sm text-secondary mt-1">
-            Avg PH/s this month: <b>{{ averagePhs.toFixed(2) }}</b>
+            Promedio PH/s este mes: <b>{{ averagePhs.toFixed(2) }}</b>
           </p>
         </div>
       </section>
@@ -23,7 +23,7 @@
         <ApexChart ref="apexRef" id="apexChart" type="bar" height="300" :options="chartOptions" :series="chartSeries" />
         <div class="flex justify-between mt-4 text-sm text-secondary px-4">
           <span>Total USDT: <b>{{ formatMoney(totalEarningsUSD) }}</b></span>
-          <span>Equivalent BTC: <b>{{ totalEarningsBTC.toFixed(5) }} BTC</b></span>
+          <span>Equivalente en BTC: <b>{{ totalEarningsBTC.toFixed(5) }} BTC</b></span>
         </div>
       </section>
     </VaCardContent>
@@ -73,7 +73,7 @@ const exportAsExcel = async () => {
     const sheet = workbook.addWorksheet('Revenue Report')
 
     // Add headers
-    sheet.addRow(['Date', 'Revenue (USDT)', 'Avg PH/s', 'Active Readings'])
+    sheet.addRow(['Fecha', 'Ingresos (USDT)', 'Promedio de PH/s', 'Lecturas Activas'])
 
     // Add data
     chartData.value.forEach((d) => {
@@ -161,7 +161,7 @@ async function loadBraiinsData() {
 // ----- Chart Options -----
 const chartSeries = computed(() => [
   {
-    name: 'Revenue (USDT)',
+    name: 'Ingresos (USDT)',
     data: chartData.value.map((d) => d.revenueUSD),
   },
 ])
@@ -176,10 +176,10 @@ const chartOptions = computed(() => {
     xaxis: {
       categories: chartData.value.map((d) => d.date),
       labels: { rotate: -45, style: { fontSize: '12px' } },
-      title: { text: 'Date' },
+      title: { text: 'Fecha' },
     },
     yaxis: {
-      title: { text: 'Revenue (USDT)' },
+      title: { text: 'Ingresos (USDT)' },
       min: 0,
       max: maxRevenue,
       labels: {
@@ -193,9 +193,9 @@ const chartOptions = computed(() => {
         return `
           <div style="padding:8px;">
             <b>${d.date}</b><br>
-            Revenue: <b>$${d.revenueUSD.toLocaleString(undefined, { maximumFractionDigits: 2 })}</b><br>
-            Avg PH/s: <b>${d.avg_phs?.toFixed(2) ?? 0}</b><br>
-            Active Readings: <b>${d.active_readings ?? 0}</b>
+            Ingresos: <b>$${d.revenueUSD.toLocaleString(undefined, { maximumFractionDigits: 2 })}</b><br>
+            Promedio de PH/s: <b>${d.avg_phs?.toFixed(2) ?? 0}</b><br>
+            Lecturas activas: <b>${d.active_readings ?? 0}</b>
           </div>
         `
       },

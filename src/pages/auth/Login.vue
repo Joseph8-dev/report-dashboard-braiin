@@ -4,17 +4,17 @@
     class="max-w-md mx-auto mt-20 p-6 bg-white rounded-2xl shadow-2xl hover:shadow-3xl transition-shadow duration-300"
     @submit.prevent="submit"
   >
-    <h1 class="font-semibold text-4xl mb-6 text-center">Log in</h1>
+    <h1 class="font-semibold text-4xl mb-6 text-center">Iniciar sesión</h1>
 
     <VaInput
       v-model="formData.email"
       :rules="[validators.required]"
       class="mb-4"
-      label="Username"
+      label="Usuario"
       type="text"
       rounded
       border
-      placeholder="Enter your username"
+      placeholder="Ingresa tu nombre de usuario"
     />
 
     <VaValue v-slot="isPasswordVisible" :default-value="false">
@@ -23,10 +23,10 @@
         :rules="[validators.required]"
         :type="isPasswordVisible.value ? 'text' : 'password'"
         class="mb-4"
-        label="Password"
+        label="Contraseña"
         rounded
         border
-        placeholder="Enter your password"
+        placeholder="Ingresa tu contraseña"
         @clickAppendInner.stop="isPasswordVisible.value = !isPasswordVisible.value"
       >
         <template #appendInner>
@@ -40,7 +40,7 @@
     </VaValue>
 
     <div class="flex justify-center mb-6">
-      <VaCheckbox v-model="formData.keepLoggedIn" label="Keep me signed in on this device" />
+      <VaCheckbox v-model="formData.keepLoggedIn" label="Mantenerme conectado en este dispositivo" />
     </div>
 
     <div class="flex justify-center">
@@ -48,7 +48,7 @@
         class="w-full py-3 font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all"
         @click="submit"
       >
-        Login
+        Iniciar sesión
       </VaButton>
     </div>
   </VaForm>
@@ -87,10 +87,10 @@ const submit = async () => {
   if (data.success) {
     localStorage.setItem('report_token', data.token)
     localStorage.setItem('report_user', JSON.stringify(data.user))
-    init({ message: "You've successfully logged in", color: 'success' })
+    init({ message: "Has iniciado sesión correctamente", color: 'success' })
     router.push({ name: 'dashboard' })
   } else {
-    init({ message: data.error || 'Invalid credentials', color: 'danger' })
+    init({ message: data.error || 'Credenciales inválidas', color: 'danger' })
   }
 }
 </script>

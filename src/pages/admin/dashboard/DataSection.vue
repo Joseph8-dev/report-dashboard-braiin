@@ -38,8 +38,8 @@ const { getColor } = useColors()
 // ==================== METRICS ====================
 const dailyRevenueMetric = ref<DashboardMetric>({
   id: 'dailyRevenue',
-  title: 'Daily Revenue',
-  value: 'Loading...',
+  title: 'Ingresos diarios',
+  value: 'Cargando...',
   icon: 'mso-attach_money',
   changeText: '',
   changeDirection: 'up',
@@ -49,8 +49,8 @@ const dailyRevenueMetric = ref<DashboardMetric>({
 
 const priceStatsMetric = ref<DashboardMetric>({
   id: 'priceStats',
-  title: 'BTC Price',
-  value: 'Loading...',
+  title: 'Precio BTC',
+  value: 'Cargando...',
   icon: 'mso-currency_bitcoin',
   changeText: '',
   changeDirection: 'up',
@@ -60,8 +60,8 @@ const priceStatsMetric = ref<DashboardMetric>({
 
 const transactionStatsMetric = ref<DashboardMetric>({
   id: 'transactionStats',
-  title: 'Avg Transaction Fee (1y)',
-  value: 'Loading...',
+  title: 'Prom. comisión por transacción (1 año)',
+  value: 'Cargando...',
   icon: 'mso-trending_up',
   changeText: '',
   changeDirection: 'up',
