@@ -111,8 +111,14 @@ const exportAsExcel = async () => {
 
 // ----- Helper -----
 function normalizeDate(dt: string): string {
-  const d = new Date(dt)
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+  // Safe normalize: return YYYY-MM-DD without creating a Date object (avoids TZ shifts)
+  return (dt || '').slice(0, 10)
+}
+
+function normalizeUTCDate(dt: string): string {
+  // Just keep the YYYY-MM-DD part of the string
+  if (!dt) return ''
+  return dt.slice(0, 10) // Works whether dt is '2025-11-03' or '2025-11-03T00:00:00Z'
 }
 
 
@@ -137,17 +143,31 @@ async function loadBraiinsData() {
     const revenueRaw: any[] = await revenueRes.json()
     const phsRaw: { day: string; avg_phs: number; active_readings: number }[] = await phsRes.json()
 
-    chartData.value = revenueRaw.map((item: any) => {
-      const date = normalizeDate(item.timestamp)
-      const revenueUSD = (Number(item.revenue_sat) / 1e8) * btcPrice
-      const matchPhs = phsRaw.find((p) => normalizeDate(p.day) === date)
-      return {
-        date,
-        revenueUSD,
-        avg_phs: matchPhs ? matchPhs.avg_phs : 0,
-        active_readings: matchPhs ? matchPhs.active_readings : 0,
-      }
-    })
+    // --- LOG API RESPONSES ---
+    console.log('=== Revenue Endpoint ===')
+    console.log(revenueRaw)
+    console.log('=== PH/s Endpoint ===')
+    console.log(phsRaw)
+
+    // Only keep rows that belong to the selected year-month to avoid the "previous-day" UTC artifact.
+    const selectedPrefix = `${year}-${String(month).padStart(2, '0')}` // e.g. "2025-11"
+
+    const mapped = revenueRaw.map((item: any) => {
+  const date = normalizeUTCDate(item.day || item.timestamp); // revenue date in YYYY-MM-DD
+  const matchPhs = phsRaw.find((p) => normalizeUTCDate(p.day) === date); // normalize PH/s day
+  return {
+    date,
+    revenueUSD: (Number(item.revenue_sat) / 1e8) * btcPrice,
+    avg_phs: matchPhs?.avg_phs ?? 0,
+    active_readings: matchPhs?.active_readings ?? 0,
+  };
+});
+
+
+
+    // Filter out rows that don't belong to the selected month (removes 2025-10-31 when selecting 2025-11)
+    chartData.value = mapped.filter((r) => r.date.startsWith(selectedPrefix))
+
 
     totalEarningsUSD.value = chartData.value.reduce((sum, d) => sum + d.revenueUSD, 0)
     totalEarningsBTC.value = chartData.value.reduce((sum, d) => sum + d.revenueUSD / (btcPrice || 1), 0)
@@ -196,9 +216,10 @@ const chartOptions = computed(() => {
             <b>${d.date}</b><br>
             Ingresos: <b>$${d.revenueUSD.toLocaleString(undefined, { maximumFractionDigits: 2 })}</b><br>
             Promedio de PH/s: <b>${d.avg_phs?.toFixed(2) ?? 0}</b><br>
-            Lecturas activas: <b>${d.active_readings ?? 0}</b>
+            
           </div>
         `
+        //REMOVED: Lecturas activas: <b>${d.active_readings ?? 0}</b>
       },
     },
     colors: ['#3b82f6'],
