@@ -92,7 +92,7 @@ async function loadBraiinsData() {
     console.log('➡️ Starting to load Braiins data...')
 
     const [priceRes, revenueRes, poolRes] = await Promise.all([
-      fetch('https://dev-sec.app/api/price-stats'),
+      fetch('https://dev-sec.app/api/price-stats-old'),
       fetch('https://dev-sec.app/api/daily-revenue-history?timeframe=1m'),
       fetch('https://dev-sec.app/api/pool-stats'),
     ])

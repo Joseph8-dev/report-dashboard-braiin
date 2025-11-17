@@ -74,7 +74,7 @@ const transactionStatsMetric = ref<DashboardMetric>({
 // Fetch BTC price once and reuse
 async function fetchBTCPrice(): Promise<number> {
   try {
-    const res = await fetch('https://dev-sec.app/api/price-stats')
+    const res = await fetch('https://dev-sec.app/api/price-stats-old')
     const { data } = await res.json()
     if (!data?.price) throw new Error('Invalid BTC price data')
     return Number(data.price)

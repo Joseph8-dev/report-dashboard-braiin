@@ -43,6 +43,7 @@ interface RevenueData {
   revenueUSD: number
   avg_phs: number
   active_readings: number
+  dailyBtcPrice: number
 }
 
 // ----- Month/Year Selector -----
@@ -62,6 +63,8 @@ const chartData = ref<RevenueData[]>([])
 const totalEarningsUSD = ref(0)
 const totalEarningsBTC = ref(0)
 const averagePhs = ref(0)
+const btcPriceNow = ref(0)
+
 
 // add a ref to the ApexChart component
 const apexRef = ref<any>(null)
@@ -73,18 +76,22 @@ const exportAsExcel = async () => {
     const sheet = workbook.addWorksheet('Revenue Report')
 
     // Add headers
-    sheet.addRow(['Fecha', 'Ingresos (USDT)', 'Promedio de PH/s', 'Lecturas Activas'])
+    sheet.addRow(['Fecha', 'Ingresos (USDT)', 'Promedio de PH/s', 'Precio BTC (USD)'])
 
     // Add data
     chartData.value.forEach((d) => {
-      sheet.addRow([d.date, d.revenueUSD, d.avg_phs, d.active_readings])
+      sheet.addRow([
+        d.date,
+        d.revenueUSD,
+        d.avg_phs,
+        d.dailyBtcPrice, // <-- daily BTC price
+      ])
     })
 
     // Export chart as image via the ApexCharts instance exposed on the component ref
     const chartComp = apexRef.value
     if (chartComp?.chart?.dataURI) {
       const data = await chartComp.chart.dataURI()
-      // data.imgURI is like "data:image/png;base64,...."
       const imgURI = data.imgURI || data
       const base64 = imgURI.split(',')[1]
       if (base64) {
@@ -116,9 +123,14 @@ function normalizeDate(dt: string): string {
 }
 
 function normalizeUTCDate(dt: string): string {
-  // Just keep the YYYY-MM-DD part of the string
+  // Keep only YYYY-MM-DD, avoid Date objects
+  return (dt || '').slice(0, 10)
+}
+
+
+function normalizeDateOnly(dt: string) {
   if (!dt) return ''
-  return dt.slice(0, 10) // Works whether dt is '2025-11-03' or '2025-11-03T00:00:00Z'
+  return dt.slice(0, 10) // just YYYY-MM-DD
 }
 
 
@@ -131,18 +143,22 @@ async function loadBraiinsData() {
     const month = Number(monthStr)
     const year = Number(yearStr)
 
-    const [priceRes, revenueRes, phsRes] = await Promise.all([
+    const [priceRes, priceMonthRes, revenueRes, phsRes] = await Promise.all([
       fetch('https://dev-sec.app/api/price-stats'),
+      fetch(`https://dev-sec.app/api/price-stats/month?month=${month}&year=${year}`),
       fetch(`https://dev-sec.app/api/daily-revenue-history?month=${month}&year=${year}`),
       fetch(`https://dev-sec.app/api/daily-phs-history?month=${month}&year=${year}`),
     ])
 
     const btcPriceData = await priceRes.json()
     const btcPrice = Number(btcPriceData.data?.price || 0)
+    btcPriceNow.value = btcPrice
 
     const revenueRaw: any[] = await revenueRes.json()
     const phsRaw: { day: string; avg_phs: number; active_readings: number }[] = await phsRes.json()
-
+    const priceMonthData = await priceMonthRes.json()
+    console.log("=== Monthly BTC Price ===")
+    console.log(priceMonthData)
     // --- LOG API RESPONSES ---
     console.log('=== Revenue Endpoint ===')
     console.log(revenueRaw)
@@ -152,16 +168,31 @@ async function loadBraiinsData() {
     // Only keep rows that belong to the selected year-month to avoid the "previous-day" UTC artifact.
     const selectedPrefix = `${year}-${String(month).padStart(2, '0')}` // e.g. "2025-11"
 
-    const mapped = revenueRaw.map((item: any) => {
-  const date = normalizeUTCDate(item.day || item.timestamp); // revenue date in YYYY-MM-DD
-  const matchPhs = phsRaw.find((p) => normalizeUTCDate(p.day) === date); // normalize PH/s day
+    // Map revenue + PH/s + daily BTC price
+const mapped = revenueRaw.map((item: any) => {
+  const date = normalizeUTCDate(item.day || item.timestamp) // "YYYY-MM-DD"
+
+  // Find the PH/s for this day
+  const matchPhs = phsRaw.find((p) => normalizeUTCDate(p.day) === date)
+
+  // Find the BTC price for this day
+  const matchPrice = priceMonthData.days.find((p: any) => normalizeUTCDate(p.day) === date)
+
+  if (!matchPrice) console.warn("No BTC price for date:", date)
+
   return {
     date,
-    revenueUSD: (Number(item.revenue_sat) / 1e8) * btcPrice,
+    // Use the daily BTC price for conversion from sats to USD
+    revenueUSD: (Number(item.revenue_sat) / 1e8) * (matchPrice?.price ?? btcPriceNow.value),
     avg_phs: matchPhs?.avg_phs ?? 0,
     active_readings: matchPhs?.active_readings ?? 0,
-  };
-});
+    dailyBtcPrice: matchPrice?.price ?? btcPriceNow.value,
+  }
+})
+
+
+
+console.log("Mapped Revenue + BTC + PH/s", mapped)
 
 
 
@@ -216,13 +247,13 @@ const chartOptions = computed(() => {
             <b>${d.date}</b><br>
             Ingresos: <b>$${d.revenueUSD.toLocaleString(undefined, { maximumFractionDigits: 2 })}</b><br>
             Promedio de PH/s: <b>${d.avg_phs?.toFixed(2) ?? 0}</b><br>
-            
+            Precio BTC: <b>$${d.dailyBtcPrice.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</b><br>
           </div>
         `
         //REMOVED: Lecturas activas: <b>${d.active_readings ?? 0}</b>
       },
     },
-    colors: ['#3b82f6'],
+    colors: ['#3CB371'],
     legend: { show: false },
   }
 })
