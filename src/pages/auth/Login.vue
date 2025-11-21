@@ -5,17 +5,17 @@
       class="max-w-md mx-auto mt-20 p-6 bg-white rounded-2xl shadow-2xl hover:shadow-3xl transition-shadow duration-300"
       @submit.prevent="submit"
     >
-      <h1 class="font-semibold text-4xl mb-6 text-center">Iniciar sesión</h1>
+      <h1 class="font-semibold text-4xl mb-6 text-center">{{ text_loginTitle }}</h1>
 
       <VaInput
         v-model="formData.email"
         :rules="[validators.required]"
         class="mb-4"
-        label="Usuario"
+        :label="text_userLabel"
         type="text"
         rounded
         border
-        placeholder="Ingresa tu nombre de usuario"
+        :placeholder="text_userPlaceholder"
       />
 
       <VaValue v-slot="isPasswordVisible" :default-value="false">
@@ -24,15 +24,15 @@
           :rules="[validators.required]"
           :type="isPasswordVisible.value ? 'text' : 'password'"
           class="mb-4"
-          label="Contraseña"
+          :label="text_passwordLabel"
           rounded
           border
-          placeholder="Ingresa tu contraseña"
+          :placeholder="text_passwordPlaceholder"
           @clickAppendInner.stop="isPasswordVisible.value = !isPasswordVisible.value"
         >
           <template #appendInner>
             <VaIcon
-              :name="isPasswordVisible.value ? 'mso-visibility_off' : 'mso-visibility'"
+              :name="isPasswordVisible.value ? iconHidden : iconVisible"
               class="cursor-pointer"
               color="secondary"
             />
@@ -43,7 +43,7 @@
       <div class="flex justify-center mb-6">
         <VaCheckbox
           v-model="formData.keepLoggedIn"
-          label="Mantenerme conectado en este dispositivo"
+          :label="text_keepLoggedIn"
         />
       </div>
 
@@ -52,12 +52,15 @@
           class="w-full py-3 font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all"
           @click="submit"
         >
-          Iniciar sesión
+          {{ text_loginButton }}
         </VaButton>
       </div>
     </VaForm>
   </div>
 </template>
+
+
+
 
 
 <script lang="ts" setup>
@@ -75,6 +78,22 @@ const formData = reactive({
   password: '',
   keepLoggedIn: false,
 })
+
+/* Prevent Chrome Translate from breaking icon names */
+const iconVisible = 'mso-' + 'visibility'
+const iconHidden = 'mso-' + 'visibility_off'
+
+/* Protect all text from Chrome Translator by using JS variables */
+const text_loginTitle = 'Iniciar sesión'
+const text_userLabel = 'Usuario'
+const text_userPlaceholder = 'Ingresa tu nombre de usuario'
+const text_passwordLabel = 'Contraseña'
+const text_passwordPlaceholder = 'Ingresa tu contraseña'
+const text_keepLoggedIn = 'Mantenerme conectado en este dispositivo'
+const text_loginButton = 'Iniciar sesión'
+
+/* Your existing logic */
+
 
 const submit = async () => {
   if (!validate()) return
