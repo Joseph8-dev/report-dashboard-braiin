@@ -1,55 +1,67 @@
 <template>
-  <VaCard class="flex flex-col">
-    <VaCardTitle class="flex items-start justify-between">
-      <h1 class="card-title text-secondary font-bold uppercase">Informe de Ingresos Minería (Apex)</h1>
-      <div class="flex gap-2 w-[400px] justify-end">
-        <!-- Selector de Periodo -->
-        <VaSelect 
-          v-model="selectedFilter" 
-          :options="periodOptions" 
-          preset="large" 
-          class="!w-32" 
-          teleported 
-          :class="selectedFilter === 'Semanal' ? '!w-62' : '!w-32'" 
+  <div class="notranslate" translate="no">
+    <VaCard class="flex flex-col">
+      <VaCardTitle class="flex items-start justify-between">
+        <h1 class="card-title text-secondary font-bold uppercase">Informe de Ingresos Minería (Apex)</h1>
+        <div class="flex gap-2 w-[400px] justify-end">
+          <!-- Selector de Periodo -->
+          <VaSelect 
+            v-model="selectedFilter" 
+            :options="periodOptions" 
+            preset="large" 
+            class="!w-32"
+            teleported
+            :class="selectedFilter === 'Semanal' ? '!w-62' : '!w-32'"
+          />
 
-        />
-        <!-- Month selector (only visible for Mensual) -->
+          <!-- Month selector (only visible for Mensual) -->
           <VaSelect
-    v-if="selectedFilter === 'Mensual'"
-    v-model="selectedMonth"
-    :options="monthOptions"
-    value-by="value"
-    preset="large"
-    class="!w-32"
-    teleported
-    placeholder="Selecciona mes"
-  />
+            v-if="selectedFilter === 'Mensual'"
+            v-model="selectedMonth"
+            :options="monthOptions"
+            value-by="value"
+            preset="large"
+            class="!w-32"
+            teleported
+            placeholder="Selecciona mes"
+          />
 
-        <VaButton size="medium" preset="primary" @click="exportAsExcel" class="w-32">Exportar</VaButton>
-      </div>
-    </VaCardTitle>
-
-    <VaCardContent class="flex flex-col md:flex-row md:items-center justify-between gap-5 h-full">
-      <section class="flex flex-col items-start w-full sm:w-1/3 md:w-2/5 lg:w-1/4 gap-4 md:gap-8 pl-4">
-        <div>
-          <p class="text-xl font-semibold">{{ formatMoney(totalEarningsUSD) }}</p>
-          <p class="whitespace-nowrap mt-2">Ingresos totales (USDT)</p>
-          <p v-if="averagePhs > 0" class="text-sm text-secondary mt-1">
-            Promedio PH/s este período: <b>{{ averagePhs.toFixed(2) }}</b>
-          </p>
+          <VaButton size="medium" preset="primary" @click="exportAsExcel" class="w-32">
+            Exportar
+          </VaButton>
         </div>
-      </section>
+      </VaCardTitle>
 
-      <section class="flex flex-col w-full md:w-3/5 lg:w-3/4">
-        <ApexChart ref="apexRef" id="apexChart" type="bar" height="300" :options="chartOptions" :series="chartSeries" />
-        <div class="flex justify-between mt-4 text-sm text-secondary px-4">
-          <span>Total USDT: <b>{{ formatMoney(totalEarningsUSD) }}</b></span>
-          <span>Equivalente en BTC: <b>{{ totalEarningsBTC.toFixed(5) }} BTC</b></span>
-        </div>
-      </section>
-    </VaCardContent>
-  </VaCard>
+      <VaCardContent class="flex flex-col md:flex-row md:items-center justify-between gap-5 h-full">
+        <section class="flex flex-col items-start w-full sm:w-1/3 md:w-2/5 lg:w-1/4 gap-4 md:gap-8 pl-4">
+          <div>
+            <p class="text-xl font-semibold">{{ formatMoney(totalEarningsUSD) }}</p>
+            <p class="whitespace-nowrap mt-2">Ingresos totales (USDT)</p>
+            <p v-if="averagePhs > 0" class="text-sm text-secondary mt-1">
+              Promedio PH/s este período: <b>{{ averagePhs.toFixed(2) }}</b>
+            </p>
+          </div>
+        </section>
+
+        <section class="flex flex-col w-full md:w-3/5 lg:w-3/4">
+          <ApexChart
+            ref="apexRef"
+            id="apexChart"
+            type="bar"
+            height="300"
+            :options="chartOptions"
+            :series="chartSeries"
+          />
+          <div class="flex justify-between mt-4 text-sm text-secondary px-4">
+            <span>Total USDT: <b>{{ formatMoney(totalEarningsUSD) }}</b></span>
+            <span>Equivalente en BTC: <b>{{ totalEarningsBTC.toFixed(5) }} BTC</b></span>
+          </div>
+        </section>
+      </VaCardContent>
+    </VaCard>
+  </div>
 </template>
+
 
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'

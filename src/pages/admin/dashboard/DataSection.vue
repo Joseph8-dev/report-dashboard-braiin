@@ -1,30 +1,33 @@
 <template>
-  <!-- Center grid when only 2 cards exist -->
-  <div class="w-full flex justify-center">
-    <div
-      class="grid gap-4 w-full"
-      :class="{
-        'grid-cols-1 sm:grid-cols-2 max-w-3xl': dashboardMetrics.length === 2,
-        'grid-cols-1 sm:grid-cols-2 md:grid-cols-3': dashboardMetrics.length === 3,
-      }"
-    >
-      <DataSectionItem
-        v-for="metric in dashboardMetrics"
-        :key="metric.id"
-        :title="metric.title"
-        :value="metric.value"
-        :change-text="metric.changeText"
-        :up="metric.changeDirection === 'up'"
-        :icon-background="metric.iconBackground"
-        :icon-color="metric.iconColor"
+  <div class="notranslate" translate="no">
+    <!-- Center grid when only 2 cards exist -->
+    <div class="w-full flex justify-center">
+      <div
+        class="grid gap-4 w-full"
+        :class="{
+          'grid-cols-1 sm:grid-cols-2 max-w-3xl': dashboardMetrics.length === 2,
+          'grid-cols-1 sm:grid-cols-2 md:grid-cols-3': dashboardMetrics.length === 3,
+        }"
       >
-        <template #icon>
-          <VaIcon :name="metric.icon" size="large" />
-        </template>
-      </DataSectionItem>
+        <DataSectionItem
+          v-for="metric in dashboardMetrics"
+          :key="metric.id"
+          :title="metric.title"
+          :value="metric.value"
+          :change-text="metric.changeText"
+          :up="metric.changeDirection === 'up'"
+          :icon-background="metric.iconBackground"
+          :icon-color="metric.iconColor"
+        >
+          <template #icon>
+            <VaIcon :name="metric.icon" size="large" />
+          </template>
+        </DataSectionItem>
+      </div>
     </div>
   </div>
 </template>
+
 
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue'
