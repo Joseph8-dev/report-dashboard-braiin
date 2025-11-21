@@ -260,7 +260,13 @@ const loadBraiinsData = async () => {
     chartData.value = filtered
 
     totalEarningsUSD.value = filtered.reduce((sum,d)=>sum+d.revenueUSD,0)
-    totalEarningsBTC.value = filtered.reduce((sum,d)=>sum+d.revenueUSD / (btcPrice || 1),0)
+    totalEarningsBTC.value = Number(
+      filtered.reduce(
+        (sum, d) => sum + (d.revenueUSD / d.dailyBtcPrice),
+        0
+      ).toFixed(8)
+    )
+
     const nonZeroPhs = filtered.filter(d=>d.avg_phs>0).map(d=>d.avg_phs)
     averagePhs.value = nonZeroPhs.length ? nonZeroPhs.reduce((a,b)=>a+b,0)/nonZeroPhs.length : 0
 
