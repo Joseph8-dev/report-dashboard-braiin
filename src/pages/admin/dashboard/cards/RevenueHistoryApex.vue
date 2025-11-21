@@ -131,17 +131,19 @@ const exportAsExcel = async () => {
     const workbook = new ExcelJS.Workbook()
     const sheet = workbook.addWorksheet('Revenue Report')
 
-    // Add headers (include "Máquinas activas")
-    sheet.addRow(['Fecha', 'Ingresos (USDT)', 'Promedio de PH/s', 'Precio BTC (USD)', 'Máquinas activas'])
+    // Add headers (BTC Producidos after Ingresos (USDT))
+    sheet.addRow(['Fecha', 'Ingresos (USDT)', 'BTC Producidos', 'Promedio de PH/s', 'Precio BTC (USD)', 'Máquinas activas'])
 
     // Add data
     chartData.value.forEach((d) => {
+      const btcProduced = d.dailyBtcPrice ? d.revenueUSD / d.dailyBtcPrice : 0
       sheet.addRow([
         d.date,
         d.revenueUSD,
+        btcProduced,
         d.avg_phs,
         d.dailyBtcPrice, // daily BTC price
-        d.active_workers ?? 0 // <-- new column
+        d.active_workers ?? 0 // moved one column right
       ])
     })
 
@@ -157,8 +159,8 @@ const exportAsExcel = async () => {
           extension: 'png',
         })
         sheet.addImage(imageId, {
-          tl: { col: 5, row: 10 } as any,
-          br: { col: 20, row: 25 } as any,
+          tl: { col: 6, row: 10 } as any,
+          br: { col: 21, row: 25 } as any,
           editAs: 'oneCell',
         })
       }
@@ -171,6 +173,7 @@ const exportAsExcel = async () => {
     console.error('❌ Failed to export Excel:', err)
   }
 }
+
 
 // ----- Helper -----
 function parseLocalDate(dateStr: string): Date {
