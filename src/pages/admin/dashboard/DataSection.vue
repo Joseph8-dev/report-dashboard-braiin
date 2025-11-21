@@ -1,19 +1,28 @@
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-    <DataSectionItem
-      v-for="metric in dashboardMetrics"
-      :key="metric.id"
-      :title="metric.title"
-      :value="metric.value"
-      :change-text="metric.changeText"
-      :up="metric.changeDirection === 'up'"
-      :icon-background="metric.iconBackground"
-      :icon-color="metric.iconColor"
+  <!-- Center grid when only 2 cards exist -->
+  <div class="w-full flex justify-center">
+    <div
+      class="grid gap-4 w-full"
+      :class="{
+        'grid-cols-1 sm:grid-cols-2 max-w-3xl': dashboardMetrics.length === 2,
+        'grid-cols-1 sm:grid-cols-2 md:grid-cols-3': dashboardMetrics.length === 3,
+      }"
     >
-      <template #icon>
-        <VaIcon :name="metric.icon" size="large" />
-      </template>
-    </DataSectionItem>
+      <DataSectionItem
+        v-for="metric in dashboardMetrics"
+        :key="metric.id"
+        :title="metric.title"
+        :value="metric.value"
+        :change-text="metric.changeText"
+        :up="metric.changeDirection === 'up'"
+        :icon-background="metric.iconBackground"
+        :icon-color="metric.iconColor"
+      >
+        <template #icon>
+          <VaIcon :name="metric.icon" size="large" />
+        </template>
+      </DataSectionItem>
+    </div>
   </div>
 </template>
 
@@ -58,6 +67,8 @@ const priceStatsMetric = ref<DashboardMetric>({
   iconColor: getColor('on-info'),
 })
 
+/*
+// ==================== TRANSACTION METRIC (COMMENTED OUT) ====================
 const transactionStatsMetric = ref<DashboardMetric>({
   id: 'transactionStats',
   title: 'Prom. comisión por transacción (1 año)',
@@ -68,6 +79,7 @@ const transactionStatsMetric = ref<DashboardMetric>({
   iconBackground: getColor('danger'),
   iconColor: getColor('on-danger'),
 })
+*/
 
 // ==================== FETCH FUNCTIONS ====================
 
@@ -90,11 +102,12 @@ async function fetchBTCPrice(): Promise<number> {
 async function fetchDailyRevenueHistory(btcPrice: number, timeframe = '1m') {
   try {
     const res = await fetch(`https://dev-sec.app/api/daily-revenue-history?timeframe=${timeframe}`)
-    const data = await res.json()
+  const data = await res.json()
     if (!Array.isArray(data) || data.length === 0) throw new Error('Invalid daily revenue data')
 
     const latest = data[data.length - 1]
     const latestBTC = Number(latest.revenue_sat) / 1e8
+
     dailyRevenueMetric.value.value = btcPrice
       ? `${latestBTC.toFixed(3)} BTC / $${(latestBTC * btcPrice).toLocaleString()}`
       : `${latestBTC.toFixed(3)} BTC`
@@ -115,7 +128,8 @@ async function fetchDailyRevenueHistory(btcPrice: number, timeframe = '1m') {
   }
 }
 
-// Transaction Stats
+/*
+// ==================== TRANSACTION FETCH (COMMENTED OUT) ====================
 async function fetchTransactionStats(btcPrice: number) {
   try {
     const res = await fetch('https://dev-sec.app/api/transaction-stats')
@@ -135,6 +149,7 @@ async function fetchTransactionStats(btcPrice: number) {
     transactionStatsMetric.value.changeDirection = 'down'
   }
 }
+*/
 
 // ==================== LIFECYCLE ====================
 onMounted(async () => {
@@ -142,17 +157,18 @@ onMounted(async () => {
 
   if (btcPrice) {
     priceStatsMetric.value.value = `1 BTC = $${btcPrice.toLocaleString()}`
-    priceStatsMetric.value.changeText = ''
-    priceStatsMetric.value.changeDirection = 'up'
   }
 
-  await Promise.all([fetchDailyRevenueHistory(btcPrice), fetchTransactionStats(btcPrice)])
+  await Promise.all([
+    fetchDailyRevenueHistory(btcPrice),
+    // fetchTransactionStats(btcPrice),
+  ])
 })
 
 // ==================== COMPUTED METRICS ====================
 const dashboardMetrics = computed<DashboardMetric[]>(() => [
   dailyRevenueMetric.value,
   priceStatsMetric.value,
-  transactionStatsMetric.value,
+  // transactionStatsMetric.value,
 ])
 </script>
