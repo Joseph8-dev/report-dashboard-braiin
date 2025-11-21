@@ -18,8 +18,9 @@
     v-if="selectedFilter === 'Mensual'"
     v-model="selectedMonth"
     :options="monthOptions"
+    value-by="value"
     preset="large"
-    class="!w-20"
+    class="!w-32"
     teleported
     placeholder="Selecciona mes"
   />
@@ -80,14 +81,21 @@ const monthYearOptions = Array.from({ length: 12 }, (_, i) => {
 const selectedPeriod = ref<string>(monthYearOptions[currentMonth - 1])
 
 // ----- Month Selector for Mensual -----
-// numbers 1 to 12 as strings without leading zero
-const monthOptions = ref(Array.from({ length: 12 }, (_, i) => String(i + 1)))
+// Show month names as labels but keep numeric values for backend
+const monthNames = [
+  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+]
+const monthOptions = ref(
+  monthNames.map((name, i) => ({
+    label: name,
+    title: name, // some components use `title`
+    text: name,  // some variants use `text`
+    value: i + 1 // numeric value instead of string
+  }))
+)
 
-const selectedMonth = ref(String(currentMonth)) // default: current month as string
-
-
-
-
+const selectedMonth = ref<number>(currentMonth) // default as number
 
 // ----- Filtros: Mensual / Semanal -----
 const periodOptions = ['Mensual', 'Semanal']
@@ -184,10 +192,10 @@ function getWeekStartMonday(date: Date) {
 
 
 // ----- Load Data (updated) -----
-async function loadBraiinsData() {
+const loadBraiinsData = async () => {
   try {
     const today = new Date()
-    const month = Number(selectedMonth.value) // <-- use selected month
+    const month = selectedMonth.value // now a number
     const year = today.getFullYear() // optionally, add year selector later
 
     const todayStr = localYMD(today)
@@ -306,9 +314,9 @@ const chartOptions = computed(() => {
 // ----- Watchers -----
 watch(selectedFilter, (newVal) => {
   if (newVal === 'Semanal') {
-    // reset month to current
+    // reset month to current (number)
     const now = new Date()
-    selectedMonth.value = String(now.getMonth() + 1)
+    selectedMonth.value = now.getMonth() + 1
   }
   loadBraiinsData()
 }, { immediate: true })
