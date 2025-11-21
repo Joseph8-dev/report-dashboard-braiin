@@ -6,7 +6,7 @@ export const sleep = (ms = 0) => {
 export const validators = {
   email: (v: string) => {
     const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return pattern.test(v) || 'Please enter a valid email address'
+    return pattern.test(v) || 'Por favor, ingresa una dirección de correo electrónico válida'
   },
-  required: (v: any) => !!v || 'This field is required',
+  required: (v: any) => !!v || 'Este campo es obligatorio',
 }

@@ -1,29 +1,32 @@
 <template>
-  <div class="profile-dropdown-wrapper">
-    <VaDropdown v-model="isShown" :offset="[9, 0]" class="profile-dropdown" stick-to-edges>
-      <template #anchor>
-        <VaButton preset="secondary" color="textPrimary">
-          <span class="profile-dropdown__anchor min-w-max">
-            {{ t('Admin') }}
-            <VaAvatar :size="32" color="warning"> 🧑‍💻 </VaAvatar>
-          </span>
-        </VaButton>
-      </template>
+  <div class="notranslate" translate="no">
+    <div class="profile-dropdown-wrapper">
+      <VaDropdown v-model="isShown" :offset="[9, 0]" class="profile-dropdown" stick-to-edges>
+        <template #anchor>
+          <VaButton preset="secondary" color="textPrimary">
+            <span class="profile-dropdown__anchor min-w-max">
+              {{ t('Admin') }}
+              <VaAvatar :size="32" color="warning"> 🧑‍💻 </VaAvatar>
+            </span>
+          </VaButton>
+        </template>
 
-      <VaDropdownContent
-        class="profile-dropdown__content md:w-60 px-0 py-4 w-full"
-        :style="{ '--hover-color': hoverColor }"
-      >
-        <VaList>
-          <VaListItem class="menu-item px-4 text-base cursor-pointer h-8" @click="logout">
-            <VaIcon name="mso-logout" class="pr-1" color="secondary" />
-            {{ t('Cerrar sesión') }}
-          </VaListItem>
-        </VaList>
-      </VaDropdownContent>
-    </VaDropdown>
+        <VaDropdownContent
+          class="profile-dropdown__content md:w-60 px-0 py-4 w-full"
+          :style="{ '--hover-color': hoverColor }"
+        >
+          <VaList>
+            <VaListItem class="menu-item px-4 text-base cursor-pointer h-8" @click="logout">
+              <VaIcon name="mso-logout" class="pr-1" color="secondary" />
+              {{ t('Cerrar sesión') }}
+            </VaListItem>
+          </VaList>
+        </VaDropdownContent>
+      </VaDropdown>
+    </div>
   </div>
 </template>
+
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue'

@@ -60,7 +60,7 @@ watch(
   { immediate: true },
 )
 
-const required = (v: string | SelectOption) => !!v || 'This field is required'
+const required = (v: string | SelectOption) => !!v || 'Este campo es obligatorio'
 
 const ownerFiltersSearch = ref('')
 const teamFiltersSearch = ref('')
@@ -95,7 +95,7 @@ const teamFiltersSearch = ref('')
       track-by="id"
       value-by="id"
       multiple
-      :rules="[(v: any) => ('length' in v && v.length > 0) || 'This field is required']"
+      :rules="[(v: any) => ('length' in v && v.length > 0) || 'Este campo es obligatorio']"
       :options="usersStore.items"
       :max-visible-options="bp.mdUp ? 3 : 1"
     >

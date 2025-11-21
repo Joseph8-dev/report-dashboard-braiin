@@ -1,58 +1,64 @@
 <template>
-  <VaForm
-    ref="form"
-    class="max-w-md mx-auto mt-20 p-6 bg-white rounded-2xl shadow-2xl hover:shadow-3xl transition-shadow duration-300"
-    @submit.prevent="submit"
-  >
-    <h1 class="font-semibold text-4xl mb-6 text-center">Iniciar sesión</h1>
+  <div class="notranslate" translate="no">
+    <VaForm
+      ref="form"
+      class="max-w-md mx-auto mt-20 p-6 bg-white rounded-2xl shadow-2xl hover:shadow-3xl transition-shadow duration-300"
+      @submit.prevent="submit"
+    >
+      <h1 class="font-semibold text-4xl mb-6 text-center">Iniciar sesión</h1>
 
-    <VaInput
-      v-model="formData.email"
-      :rules="[validators.required]"
-      class="mb-4"
-      label="Usuario"
-      type="text"
-      rounded
-      border
-      placeholder="Ingresa tu nombre de usuario"
-    />
-
-    <VaValue v-slot="isPasswordVisible" :default-value="false">
       <VaInput
-        v-model="formData.password"
+        v-model="formData.email"
         :rules="[validators.required]"
-        :type="isPasswordVisible.value ? 'text' : 'password'"
         class="mb-4"
-        label="Contraseña"
+        label="Usuario"
+        type="text"
         rounded
         border
-        placeholder="Ingresa tu contraseña"
-        @clickAppendInner.stop="isPasswordVisible.value = !isPasswordVisible.value"
-      >
-        <template #appendInner>
-          <VaIcon
-            :name="isPasswordVisible.value ? 'mso-visibility_off' : 'mso-visibility'"
-            class="cursor-pointer"
-            color="secondary"
-          />
-        </template>
-      </VaInput>
-    </VaValue>
+        placeholder="Ingresa tu nombre de usuario"
+      />
 
-    <div class="flex justify-center mb-6">
-      <VaCheckbox v-model="formData.keepLoggedIn" label="Mantenerme conectado en este dispositivo" />
-    </div>
+      <VaValue v-slot="isPasswordVisible" :default-value="false">
+        <VaInput
+          v-model="formData.password"
+          :rules="[validators.required]"
+          :type="isPasswordVisible.value ? 'text' : 'password'"
+          class="mb-4"
+          label="Contraseña"
+          rounded
+          border
+          placeholder="Ingresa tu contraseña"
+          @clickAppendInner.stop="isPasswordVisible.value = !isPasswordVisible.value"
+        >
+          <template #appendInner>
+            <VaIcon
+              :name="isPasswordVisible.value ? 'mso-visibility_off' : 'mso-visibility'"
+              class="cursor-pointer"
+              color="secondary"
+            />
+          </template>
+        </VaInput>
+      </VaValue>
 
-    <div class="flex justify-center">
-      <VaButton
-        class="w-full py-3 font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all"
-        @click="submit"
-      >
-        Iniciar sesión
-      </VaButton>
-    </div>
-  </VaForm>
+      <div class="flex justify-center mb-6">
+        <VaCheckbox
+          v-model="formData.keepLoggedIn"
+          label="Mantenerme conectado en este dispositivo"
+        />
+      </div>
+
+      <div class="flex justify-center">
+        <VaButton
+          class="w-full py-3 font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all"
+          @click="submit"
+        >
+          Iniciar sesión
+        </VaButton>
+      </div>
+    </VaForm>
+  </div>
 </template>
+
 
 <script lang="ts" setup>
 import { reactive } from 'vue'
