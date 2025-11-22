@@ -55,6 +55,7 @@
           <div class="flex justify-between mt-4 text-sm text-secondary px-4">
             <span>Total USDT: <b>{{ formatMoney(totalEarningsUSD) }}</b></span>
             <span>Equivalente en BTC: <b>{{ totalEarningsBTC.toFixed(5) }} BTC</b></span>
+            <span>Fecha actual: <b>{{ new Date().toLocaleDateString('es-VE') }}</b></span>
           </div>
         </section>
       </VaCardContent>
@@ -130,6 +131,7 @@ const exportAsExcel = async () => {
   try {
     const workbook = new ExcelJS.Workbook()
     const sheet = workbook.addWorksheet('Revenue Report')
+    
 
     // Add headers (BTC Producidos after Ingresos (USDT))
     sheet.addRow(['Fecha', 'Ingresos (USDT)', 'BTC Producidos', 'Promedio de PH/s', 'Precio BTC (USD)', 'Máquinas activas'])
@@ -165,6 +167,11 @@ const exportAsExcel = async () => {
         })
       }
     }
+
+    // Add file creation date in A28
+    const creationRow = sheet.getRow(28)
+    creationRow.getCell(1).value = `Fecha de emisión: ${new Date().toLocaleDateString('es-VE')}`
+    creationRow.commit()
 
     // Save file
     const buffer = await workbook.xlsx.writeBuffer()
@@ -371,17 +378,17 @@ const chartOptions = computed(() => {
     xaxis: {
   categories: chartData.value.map(d => {
     const btcProduced = (d.revenueUSD / d.dailyBtcPrice).toFixed(8)
-      const usdt = d.revenueUSD.toFixed(2)
+    const usdt = d.revenueUSD.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
     // Return an array: first line = date, second line = BTC
-    return [d.date, `${usdt} usdt/p` ]
+    return [d.date, `$ ${usdt}` ]
   }),
   labels: {
     rotate: -50, // optional, if you need rotation
     style: { fontSize: '11px' },
   },
   title: {
-    text: selectedFilter.value === 'Semanal' ? 'Día de la semana' : 'Fecha'
+    text: selectedFilter.value === 'Semanal' ? 'Día de la semana' : 'Fecha | usdt/p'
   }
 },
 
