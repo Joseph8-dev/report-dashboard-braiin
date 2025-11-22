@@ -50,7 +50,7 @@
             ref="apexRef"
             id="apexChart"
             type="bar"
-            height="300"
+            :height="dynamicHeight"
             :options="chartOptions"
             :series="chartSeries"
           />
@@ -81,6 +81,11 @@ import ApexChart from 'vue3-apexcharts'
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import { formatMoney } from '../../../../data/charts/revenueChartData'
+
+const dynamicHeight = computed(() => {
+  const rows = chartData.value.length
+  return rows * 40 + 100   // 40px per bar + padding
+})
 
 interface RevenueData {
   date: string
@@ -171,8 +176,8 @@ const exportAsExcel = async () => {
           extension: 'png',
         })
         sheet.addImage(imageId, {
-          tl: { col: 6, row: 10 } as any,
-          br: { col: 21, row: 25 } as any,
+          tl: { col: 7, row: 2 } as any,
+          br: { col: 21, row: 45 } as any,
           editAs: 'oneCell',
         })
       }
@@ -346,11 +351,12 @@ const chartOptions = computed(() => {
     // ✅ Put text INSIDE the bars
     plotOptions: {
       bar: {
+        horizontal: true,
         columnWidth: '70%',
         borderRadius: 4,
         dataLabels: {
           position: 'center',
-          orientation: 'vertical' as const
+          orientation: 'horizontal' as const
         }
       }
     },
@@ -365,14 +371,14 @@ const chartOptions = computed(() => {
       const btc = (d.revenueUSD / d.dailyBtcPrice).toFixed(8)
 
       // Combine USDT and BTC inside the bar, separated by |
-      return ` BTC/p: ${btc}`},
+      return ` USDT/p: $ ${usdt}`},
   
     style: {
       fontSize: '11px',
       fontWeight: 600,
       colors: ['#474747']
     },
-    offsetY: 40,
+    offsetY: 0,
     offsetX: 0,
   
     background: {
@@ -391,26 +397,26 @@ const chartOptions = computed(() => {
     const usdt = d.revenueUSD.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
     // Return an array: first line = date, second line = BTC
-    return [d.date, `$ ${usdt}` ]
+    return [d.date ]
   }),
   labels: {
-    rotate: -50, // optional, if you need rotation
+    rotate: 40, // optional, if you need rotation
     style: { fontSize: '11px' },
   },
   title: {
-    text: selectedFilter.value === 'Semanal' ? 'Día de la semana' : 'Fecha | usdt/p'
+    text: selectedFilter.value === 'Semanal' ? 'Día de la semana' : 'USDT/p'
   }
 },
 
 
 
     yaxis: {
-      title: { text: 'Ingresos (USDT)' },
+      title: { text: 'Fecha' },
       min: 0,
       max: maxRevenue,
       labels: {
         formatter: (val: number) =>
-          `$${val.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+          `${val.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
       }
     },
 
