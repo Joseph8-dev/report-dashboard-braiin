@@ -9,9 +9,10 @@
             v-model="selectedFilter" 
             :options="periodOptions" 
             preset="large" 
-            class="!w-32"
+            class="!w-32 notranslate"
             teleported
-            :class="selectedFilter === 'Semanal' ? '!w-62' : '!w-32'"
+            :dropdown-props="{ class: 'notranslate', translate: 'no' }"
+            :class="selectedFilter === 'Semanal' ? '!w-62' : '!w-32' "
           />
 
           <!-- Month selector (only visible for Mensual) -->
@@ -21,8 +22,9 @@
             :options="monthOptions"
             value-by="value"
             preset="large"
-            class="!w-32"
-            teleported
+            class="!w-32 notranslate"
+            :teleported="false"
+            :dropdown-props="{ class: 'notranslate', translate: 'no' }"
             placeholder="Selecciona mes"
           />
 
@@ -63,6 +65,14 @@
   </div>
 </template>
 
+<style>
+/* Extra safety: prevent Google Translate on Vuestic dropdowns */
+.vuestic-select-dropdown,
+.vuestic-select-dropdown * {
+  translate: no !important;
+}
+</style>
+
 
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'
@@ -101,7 +111,7 @@ const monthNames = [
 ]
 const monthOptions = ref(
   monthNames.map((name, i) => ({
-    label: `<span class="notranslate" translate="no">${name}</span>`,
+    label: name,
     title: name, // some components use `title`
     text: name,  // some variants use `text`
     value: i + 1 // numeric value instead of string
@@ -111,7 +121,7 @@ const monthOptions = ref(
 const selectedMonth = ref<number>(currentMonth) // default as number
 
 // ----- Filtros: Mensual / Semanal -----
-const periodOptions = ['Mensual', 'Semanal']
+const periodOptions = ['Mensual', 'Semanal',]
 const selectedFilter = ref('Mensual')
 
 // ----- Chart Data -----
@@ -443,3 +453,10 @@ watch(selectedFilter, (newVal) => {
 watch(selectedMonth, () => loadBraiinsData())
 
 </script>
+<style>
+/* Prevent Google Translate from translating Vuestic dropdowns */
+.vuestic-select-dropdown,
+.vuestic-select-dropdown * {
+  translate: no !important;
+}
+</style>
