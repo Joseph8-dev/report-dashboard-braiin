@@ -301,35 +301,127 @@ const chartSeries = computed(() => [
 
 // ----- Chart Options (tooltip updated) -----
 const chartOptions = computed(() => {
-  const maxRevenue = chartData.value.length ? Math.max(...chartData.value.map(d=>d.revenueUSD))*1.1 : 1
-  const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-  const categories = chartData.value.map(d => {
-    const dt = parseLocalDate(d.date)
-    return selectedFilter.value === 'Semanal' ? diasSemana[dt.getDay()] : d.date
-  })
+  const maxRevenue = chartData.value.length
+    ? Math.max(...chartData.value.map(d => d.revenueUSD)) * 1.1
+    : 1
+
+
+ const categories = chartData.value.map(d => {
+      const btcProduced = (d.revenueUSD / d.dailyBtcPrice).toFixed(8)
+
+  if (selectedFilter.value === 'Semanal') {
+    const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+
+    return `${diasSemana[new Date(d.date).getDay()]} | BTC: ${btcProduced}`
+  } else {
+    return `${d.date} \n BTC: ${btcProduced}`
+  }
+})
+
 
   return {
-    chart: { toolbar: { show: false }, zoom: { enabled: false }, foreColor: '#6b7280' },
-    plotOptions: { bar: { columnWidth: '60%', borderRadius: 4 } },
-    dataLabels: { enabled: false },
-    xaxis: { categories, labels:{rotate:-45, style:{fontSize:'12px'}}, title:{text:selectedFilter.value==='Semanal'?'Día de la semana':'Fecha'} },
-    yaxis: { title:{text:'Ingresos (USDT)'}, min:0, max:maxRevenue, labels:{formatter:(val:number)=>`$${val.toLocaleString(undefined,{maximumFractionDigits:0})}`} },
+    chart: {
+      toolbar: { show: false },
+      zoom: { enabled: false },
+      foreColor: '#6b7280'
+    },
+
+    // ✅ Put text INSIDE the bars
+    plotOptions: {
+      bar: {
+        columnWidth: '70%',
+        borderRadius: 4,
+        dataLabels: {
+          position: 'center',
+          orientation: 'vertical' as const
+        }
+      }
+    },
+
+    // ✅ Data labels (inside bars)
+    dataLabels: {
+  enabled: true,
+  formatter: (value: number, opts: any) => {
+    const d = chartData.value[opts.dataPointIndex]
+    if (!d) return ''
+  const usdt = d.revenueUSD.toFixed(2)
+      const btc = (d.revenueUSD / d.dailyBtcPrice).toFixed(8)
+
+      // Combine USDT and BTC inside the bar, separated by |
+      return ` BTC/p: ${btc}`},
+  
+    style: {
+      fontSize: '11px',
+      fontWeight: 600,
+      colors: ['#474747']
+    },
+    offsetY: 40,
+    offsetX: 0,
+  
+    background: {
+      enabled: false,
+    },
+    // Add custom class here
+    className: 'vertical-bar-label'
+  },
+
+
+
+
+    xaxis: {
+  categories: chartData.value.map(d => {
+    const btcProduced = (d.revenueUSD / d.dailyBtcPrice).toFixed(8)
+      const usdt = d.revenueUSD.toFixed(2)
+
+    // Return an array: first line = date, second line = BTC
+    return [d.date, `${usdt} usdt/p` ]
+  }),
+  labels: {
+    rotate: -50, // optional, if you need rotation
+    style: { fontSize: '11px' },
+  },
+  title: {
+    text: selectedFilter.value === 'Semanal' ? 'Día de la semana' : 'Fecha'
+  }
+},
+
+
+
+    yaxis: {
+      title: { text: 'Ingresos (USDT)' },
+      min: 0,
+      max: maxRevenue,
+      labels: {
+        formatter: (val: number) =>
+          `$${val.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+      }
+    },
+
     tooltip: {
-      custom: ({dataPointIndex}:any) => {
+      custom: ({ dataPointIndex }: any) => {
         const d = chartData.value[dataPointIndex]
-        if(!d) return ''
+        if (!d) return ''
+
         return `<div style="padding:8px;">
           <b>${d.date}</b><br>
-          Ingresos: <b>$${d.revenueUSD.toLocaleString(undefined,{maximumFractionDigits:2})}</b><br>
-          Promedio de PH/s: <b>${d.avg_phs?.toFixed(2)||0}</b><br>
+          Ingresos: <b>$${d.revenueUSD.toLocaleString(undefined, {
+            maximumFractionDigits: 2
+          })}</b><br>
+          Promedio de PH/s: <b>${d.avg_phs?.toFixed(2) || 0}</b><br>
           Máquinas activas: <b>${d.active_workers ?? 0}</b><br>
-          Precio BTC: <b>$${d.dailyBtcPrice.toLocaleString(undefined,{minimumFractionDigits:3, maximumFractionDigits:3})}</b><br>
+          Precio BTC: <b>$${d.dailyBtcPrice.toLocaleString(undefined, {
+            minimumFractionDigits: 3,
+            maximumFractionDigits: 3
+          })}</b><br>
         </div>`
       }
     },
-    colors:['#3CB371'], legend:{show:false}
+
+    colors: ['#3CB371'],
+    legend: { show: false }
   }
 })
+
 
 
 // ----- Watchers -----
