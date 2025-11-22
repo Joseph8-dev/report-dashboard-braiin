@@ -101,7 +101,7 @@ const monthNames = [
 ]
 const monthOptions = ref(
   monthNames.map((name, i) => ({
-    label: name,
+    label: `<span class="notranslate" translate="no">${name}</span>`,
     title: name, // some components use `title`
     text: name,  // some variants use `text`
     value: i + 1 // numeric value instead of string
