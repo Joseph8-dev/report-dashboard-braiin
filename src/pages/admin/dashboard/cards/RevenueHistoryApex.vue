@@ -392,21 +392,24 @@ const chartOptions = computed(() => {
 
 
     xaxis: {
-  categories: chartData.value.map(d => {
-    const btcProduced = (d.revenueUSD / d.dailyBtcPrice).toFixed(8)
-    const usdt = d.revenueUSD.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  categories: chartData.value.map(d => d.date),
 
-    // Return an array: first line = date, second line = BTC
-    return [d.date ]
-  }),
+  // ---- FORCE EXACT TICK INCREMENTS OF 2000 ----
+  min: 0,
+  max: Math.ceil(maxRevenue / 2000) * 2000,
+  tickAmount: Math.ceil(maxRevenue / 2000),
+  forceNiceScale: false, // prevents Apex from overriding your increments
+
   labels: {
-    rotate: 40, // optional, if you need rotation
-    style: { fontSize: '11px' },
+    formatter: (val: number) => val.toLocaleString('de-DE'),
+    style: { fontSize: '11px' }
   },
+
   title: {
-    text: selectedFilter.value === 'Semanal' ? 'Día de la semana' : 'USDT/p'
+    text: 'USDT/p'
   }
 },
+
 
 
 
@@ -414,6 +417,7 @@ const chartOptions = computed(() => {
       title: { text: 'Fecha' },
       min: 0,
       max: maxRevenue,
+      
       labels: {
         formatter: (val: number) =>
           `${val.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
