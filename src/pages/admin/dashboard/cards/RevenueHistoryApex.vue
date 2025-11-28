@@ -146,9 +146,8 @@ const exportAsExcel = async () => {
   try {
     const workbook = new ExcelJS.Workbook()
     const sheet = workbook.addWorksheet('Revenue Report')
-    
 
-    // Add headers (BTC Producidos after Ingresos (USDT))
+    // Add headers
     sheet.addRow(['Fecha', 'Ingresos (USDT)', 'BTC Producidos', 'Promedio de PH/s', 'Precio BTC (USD)', 'Máquinas activas'])
 
     // Add data
@@ -159,12 +158,12 @@ const exportAsExcel = async () => {
         d.revenueUSD,
         btcProduced,
         d.avg_phs,
-        d.dailyBtcPrice, // daily BTC price
-        d.active_workers ?? 0 // moved one column right
+        d.dailyBtcPrice,
+        d.active_workers ?? 0
       ])
     })
 
-    // Export chart as image
+    // Export chart as image (unchanged)
     const chartComp = apexRef.value
     if (chartComp?.chart?.dataURI) {
       const data = await chartComp.chart.dataURI()
@@ -188,10 +187,23 @@ const exportAsExcel = async () => {
     creationRow.getCell(1).value = `Fecha de emisión: ${new Date().toLocaleDateString('es-VE')}`
     creationRow.commit()
 
+    // --- Add Totals / Average below Fecha de emisión ---
+    const totalUSDT = chartData.value.reduce((sum, d) => sum + d.revenueUSD, 0)
+    const totalBTC = chartData.value.reduce((sum, d) => sum + (d.revenueUSD / (d.dailyBtcPrice || 1)), 0)
+    const phValues = chartData.value.map(d => d.avg_phs).filter(v => v > 0)
+    const avgPh = phValues.length ? phValues.reduce((a,b)=>a+b,0)/phValues.length : 0
+
+    const totalRowStart = 29
+    sheet.getRow(totalRowStart).getCell(1).value = `Total USDT: ${totalUSDT.toFixed(2)}`
+    sheet.getRow(totalRowStart+1).getCell(1).value = `Total BTC: ${totalBTC.toFixed(8)}`
+    sheet.getRow(totalRowStart+2).getCell(1).value = `Promedio PH: ${avgPh.toFixed(2)}`
+
     // Save file
     const buffer = await workbook.xlsx.writeBuffer()
-    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'braiins-revenue-report.xlsx')
-  } catch (err) {
+const todayStr = new Date().toISOString().slice(0,10) // YYYY-MM-DD
+const fileName = `Reporte-ingresos-braiins-${todayStr}.xlsx`
+
+saveAs(new Blob([buffer], { type: 'application/octet-stream' }), fileName)  } catch (err) {
     console.error('❌ Failed to export Excel:', err)
   }
 }
