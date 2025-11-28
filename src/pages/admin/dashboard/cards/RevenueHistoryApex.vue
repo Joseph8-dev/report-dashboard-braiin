@@ -164,23 +164,42 @@ const exportAsExcel = async () => {
     })
 
     // Export chart as image (unchanged)
-    const chartComp = apexRef.value
-    if (chartComp?.chart?.dataURI) {
-      const data = await chartComp.chart.dataURI()
-      const imgURI = data.imgURI || data
-      const base64 = imgURI.split(',')[1]
-      if (base64) {
-        const imageId = workbook.addImage({
-          base64,
-          extension: 'png',
-        })
-        sheet.addImage(imageId, {
-          tl: { col: 7, row: 2 } as any,
-          br: { col: 21, row: 45 } as any,
-          editAs: 'oneCell',
-        })
-      }
+    // Export chart as image (dynamic sizing)
+// Export chart as image (dynamic sizing with max cap)
+const chartComp = apexRef.value
+if (chartComp?.chart?.dataURI) {
+  const data = await chartComp.chart.dataURI()
+  const imgURI = data.imgURI || data
+  const base64 = imgURI.split(',')[1]
+  if (base64) {
+    const imageId = workbook.addImage({
+      base64,
+      extension: 'png',
+    })
+
+    // Determine image size based on chartData length
+    const numRows = chartData.value.length
+    const startRow = 2
+    let endRow: number
+
+    if (numRows < 10) {
+      // If few rows, stretch image proportionally
+      endRow = startRow + 10 // minimum height 10 rows
+    } else {
+      // If many rows, keep same as before (fixed size)
+      endRow = 45
     }
+
+    const startCol = 7
+    const endCol = 21
+
+    sheet.addImage(imageId, {
+      tl: { col: startCol, row: startRow } as any,
+      br: { col: endCol, row: endRow } as any,
+      editAs: 'oneCell',
+    })
+  }
+}
 
     // Add file creation date in A28
     const creationRow = sheet.getRow(28)
