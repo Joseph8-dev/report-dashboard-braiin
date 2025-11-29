@@ -4,7 +4,6 @@
       <VaCardTitle class="flex items-start justify-between">
         <h1 class="card-title text-secondary font-bold uppercase">Informe de Ingresos Minería (Apex)</h1>
         <div class="flex gap-2 w-[400px] justify-end">
-          <!-- Selector de Periodo -->
           <VaSelect 
             v-model="selectedFilter" 
             :options="periodOptions" 
@@ -15,7 +14,6 @@
             :class="selectedFilter === 'Semanal' ? '!w-62' : '!w-32' "
           />
 
-          <!-- Month selector (only visible for Mensual) -->
           <VaSelect
             v-if="selectedFilter === 'Mensual'"
             v-model="selectedMonth"
@@ -39,8 +37,13 @@
           <div>
             <p class="text-xl font-semibold">{{ formatMoney(totalEarningsUSD) }}</p>
             <p class="whitespace-nowrap mt-2">Ingresos totales (USDT)</p>
-            <p v-if="averagePhs > 0" class="text-sm text-secondary mt-1">
+          </div>
+          <div>
+            <p v-if="averagePhs > 0" class="text-sm text-secondary">
               Promedio PH/s este período: <b>{{ averagePhs.toFixed(2) }}</b>
+            </p>
+            <p v-if="averageBtcPrice > 0" class="text-sm text-secondary mt-1">
+              Promedio de tasa BTC: <b>{{ formatMoney(averageBtcPrice) }}</b>
             </p>
           </div>
         </section>
@@ -84,7 +87,7 @@ import { formatMoney } from '../../../../data/charts/revenueChartData'
 
 const dynamicHeight = computed(() => {
   const rows = chartData.value.length
-  return rows * 40 + 100   // 40px per bar + padding
+  return rows * 40 + 100    // 40px per bar + padding
 })
 
 interface RevenueData {
@@ -134,6 +137,8 @@ const chartData = ref<RevenueData[]>([])
 const totalEarningsUSD = ref(0)
 const totalEarningsBTC = ref(0)
 const averagePhs = ref(0)
+// NUEVA VARIABLE
+const averageBtcPrice = ref(0)
 const btcPriceNow = ref(0)
 
 
@@ -204,6 +209,8 @@ if (chartComp?.chart?.dataURI) {
     // Add file creation date in A28
     const creationRow = sheet.getRow(28)
     creationRow.getCell(1).value = `Fecha de emisión: ${new Date().toLocaleDateString('es-VE')}`
+    // Set text bold
+    creationRow.getCell(1).font = { bold: true }
     creationRow.commit()
 
     // --- Add Totals / Average below Fecha de emisión ---
@@ -213,9 +220,29 @@ if (chartComp?.chart?.dataURI) {
     const avgPh = phValues.length ? phValues.reduce((a,b)=>a+b,0)/phValues.length : 0
 
     const totalRowStart = 29
-    sheet.getRow(totalRowStart).getCell(1).value = `Total USDT: ${totalUSDT.toFixed(2)}`
-    sheet.getRow(totalRowStart+1).getCell(1).value = `Total BTC: ${totalBTC.toFixed(8)}`
-    sheet.getRow(totalRowStart+2).getCell(1).value = `Promedio PH: ${avgPh.toFixed(2)}`
+    // Total USDT (Bold)
+    const usdtCell = sheet.getRow(totalRowStart).getCell(1)
+    usdtCell.value = `Total USDT: ${totalUSDT.toFixed(2)}`
+    usdtCell.font = { bold: true }
+    sheet.getRow(totalRowStart).commit()
+
+    // Total BTC (Bold)
+    const btcCell = sheet.getRow(totalRowStart+1).getCell(1)
+    btcCell.value = `Total BTC: ${totalBTC.toFixed(8)}`
+    btcCell.font = { bold: true }
+    sheet.getRow(totalRowStart+1).commit()
+
+    // Promedio PH (Bold)
+    const phCell = sheet.getRow(totalRowStart+2).getCell(1)
+    phCell.value = `Promedio PH: ${avgPh.toFixed(2)}`
+    phCell.font = { bold: true }
+    sheet.getRow(totalRowStart+2).commit()
+
+    // NUEVO: Promedio Tasa BTC (Bold)
+    const btcPriceCell = sheet.getRow(totalRowStart+3).getCell(1)
+    btcPriceCell.value = `Promedio de tasa BTC: ${averageBtcPrice.value.toFixed(2)}`
+    btcPriceCell.font = { bold: true }
+    sheet.getRow(totalRowStart+3).commit()
 
     // Save file
     const buffer = await workbook.xlsx.writeBuffer()
@@ -291,7 +318,7 @@ const loadBraiinsData = async () => {
       const matchPhs = phsRaw.find(p => (p.day || '').slice(0,10) === date)
       const matchPrice = priceMonthData.days.find((p: any) => (p.day || '').slice(0,10) === date)
       const matchWorkers = activeWorkersRaw.find(w => (w.day || '').slice(0,10) === date)
-    
+      
       return {
         date,
         revenueUSD: (Number(item.revenue_sat)/1e8) * (matchPrice?.price ?? btcPriceNow.value),
@@ -338,6 +365,10 @@ const loadBraiinsData = async () => {
     const nonZeroPhs = filtered.filter(d=>d.avg_phs>0).map(d=>d.avg_phs)
     averagePhs.value = nonZeroPhs.length ? nonZeroPhs.reduce((a,b)=>a+b,0)/nonZeroPhs.length : 0
 
+    // NUEVO: Cálculo del promedio de tasa BTC
+    const btcPrices = filtered.filter(d => d.dailyBtcPrice > 0).map(d => d.dailyBtcPrice)
+    averageBtcPrice.value = btcPrices.length ? btcPrices.reduce((a,b)=>a+b,0)/btcPrices.length : 0
+
   } catch(err) {
     console.error('❌ Failed to load Braiins data:', err)
   }
@@ -359,7 +390,7 @@ const chartOptions = computed(() => {
     : 1
 
 
- const categories = chartData.value.map(d => {
+  const categories = chartData.value.map(d => {
       const btcProduced = (d.revenueUSD / d.dailyBtcPrice).toFixed(8)
 
   if (selectedFilter.value === 'Semanal') {
@@ -417,7 +448,7 @@ const chartOptions = computed(() => {
     },
     // Add custom class here
     className: 'vertical-bar-label'
-  },
+    },
 
 
 
@@ -494,10 +525,3 @@ watch(selectedFilter, (newVal) => {
 watch(selectedMonth, () => loadBraiinsData())
 
 </script>
-<style>
-/* Prevent Google Translate from translating Vuestic dropdowns */
-.vuestic-select-dropdown,
-.vuestic-select-dropdown * {
-  translate: no !important;
-}
-</style>
