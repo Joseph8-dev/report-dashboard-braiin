@@ -26,6 +26,10 @@ import Timeline from './cards/Timeline.vue'
     </div>
 
     <DataSection />
+<div class="flex justify-center">
+  <Timeline class="w-full" />
+</div>
+
 
     <div class="flex flex-col md:flex-row gap-4">
       <!--   <RevenueByLocationMap class="w-full md:w-4/6" /> -->
@@ -34,7 +38,6 @@ import Timeline from './cards/Timeline.vue'
 
     <div class="flex flex-col md:flex-row gap-4">
       <!--    <ProjectTable class="w-full md:w-1/2" /> -->
-      <!--    <Timeline class="w-full md:w-1/2" /> -->
     </div>
   </section>
 </template>

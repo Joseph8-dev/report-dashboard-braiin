@@ -328,6 +328,8 @@ const loadBraiinsData = async () => {
         active_workers: matchWorkers?.active_workers ?? null
       }
     })
+    console.log('Loaded Braiins entry:', mapped)
+
 
     mapped.sort((a,b) => a.date.localeCompare(b.date))
 
