@@ -135,7 +135,7 @@ const saveForm = async () => {
         <VaInput
           v-model="formData.concepto"
           label="Concepto"
-          placeholder="Ingrese el concepto"
+          placeholder="Introduzca el concepto"
           required
         />
 
