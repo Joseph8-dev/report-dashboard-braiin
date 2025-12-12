@@ -15,9 +15,7 @@
           preset="large"
           teleported
         />
-        <VaButton color="primary" @click="showAddModal = true" size="medium" preset="primary" class="w-32">
-          Agregar
-        </VaButton>
+      
         <VaButton color="primary" @click="exportAsExcel" size="medium" preset="primary" class="w-32">
           Exportar
         </VaButton>
@@ -143,6 +141,7 @@ interface Entry {
   monto: number;
   txid: string;
   timestamp: string;
+  concepto: string;
 }
 
 const entries = ref<Entry[]>([]);
@@ -160,6 +159,7 @@ const columns = [
   { key: "red", label: "Red" },
   { key: "monto", label: "Monto (USDT)" },
   { key: "txid", label: "TxID" }, 
+  { key: "concepto", label: "Concepto" },
   { key: "timestamp", label: "Fecha" },
   { key: "acciones", label: "" }, // Columna de acciones
 ];
@@ -190,6 +190,7 @@ const formData = reactive({
   red: "",
   monto: 0,
   txid: "",
+  concepto: "",
 });
 
 /* FETCH DATA FROM API */
@@ -206,6 +207,7 @@ const fetchTransactions = async () => {
       red: item.red,
       monto: item.monto,
       txid: item.tx_id || item.txid || "N/A", // Usar || para manejar "" (cadenas vacías)
+      concepto: item.concepto, 
       timestamp: item.date ?? "",
     }));
 
@@ -302,11 +304,11 @@ const exportAsExcel = async () => {
     const sheet = workbook.addWorksheet("Retiros");
 
     // Headers
-    sheet.addRow(["Fecha", "Proveedor", "Wallet", "Red", "Monto (USDT)", "TxID"]);
+    sheet.addRow(["Fecha", "Proveedor", "Wallet", "Red", "Monto (USDT)", "TxID", "Concepto"]);
 
     // Data
     entries.value.forEach((d) => {
-      sheet.addRow([d.timestamp, d.proveedor, d.wallet, d.red, d.monto, d.txid]);
+      sheet.addRow([d.timestamp, d.proveedor, d.wallet, d.red, d.monto, d.txid, d.concepto]);
     });
 
     // Add totals row

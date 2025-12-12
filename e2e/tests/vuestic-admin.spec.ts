@@ -22,11 +22,11 @@ const pageMocks: {
     url: '/preferences',
   },
   {
-    name: 'Users',
-    url: '/users',
+    name: 'control-de-pagos',
+    url: '/control-de-pagos',
     apiMocks: {
       '/projects': getProjectsStub,
-      '/users': getUsersStub,
+      '/control-de-pagos': getUsersStub,
     },
   },
   {

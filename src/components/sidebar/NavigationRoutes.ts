@@ -18,13 +18,13 @@ export default {
         icon: 'vuestic-iconset-dashboard',
       },
     },
-    //   {
-    //     name: 'users',
-    //     displayName: 'menu.users',
-    //     meta: {
-    //       icon: 'group',
-    //     },
-    //   },
+       {
+         name: 'control-de-pagos',
+         displayName: 'Control de Pagos',
+         meta: {
+           icon: 'folder_shared',
+         },
+       },
     //   {
     //     name: 'projects',
     //     displayName: 'menu.projects',

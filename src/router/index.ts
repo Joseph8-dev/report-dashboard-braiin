@@ -40,8 +40,8 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('../pages/preferences/Preferences.vue'),
       },
       {
-        name: 'users',
-        path: 'users',
+        name: 'control-de-pagos',
+        path: 'control-de-pagos',
         component: () => import('../pages/users/UsersPage.vue'),
       },
       {
