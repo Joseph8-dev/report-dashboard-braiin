@@ -18,26 +18,31 @@ export default {
         icon: 'vuestic-iconset-dashboard',
       },
     },
+       
+       
        {
+         name: 'dashboard-bitcoin',
+         displayName: 'Dashboard - Bitcoin Account',
+         meta: {
+        icon: 'vuestic-iconset-dashboard',
+         },
+       },
+       {
+         name: 'dashboard-grupo-dms',
+         displayName: 'Dashboard - Grupo DMS',
+         meta: {
+        icon: 'vuestic-iconset-dashboard',
+         },
+       },
+    {
          name: 'control-de-pagos',
          displayName: 'Control de Pagos',
          meta: {
            icon: 'folder_shared',
          },
        },
-    //   {
-    //     name: 'projects',
-    //     displayName: 'menu.projects',
-    //     meta: {
-    //       icon: 'folder_shared',
-    //     },
-    //   },
-    //   {
-    //     name: 'payments',
-    //     displayName: 'menu.payments',
-    //     meta: {
-    //       icon: 'credit_card',
-    //     },
+       
+       
     //     children: [
     //       {
     //         name: 'payment-methods',

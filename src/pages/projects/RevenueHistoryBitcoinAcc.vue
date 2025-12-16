@@ -1,0 +1,536 @@
+<template>
+  <div class="notranslate" translate="no">
+    <VaCard class="flex flex-col">
+      <VaCardTitle class="flex items-start justify-between">
+        <h1 class="card-title text-secondary font-bold uppercase">Informe de Ingresos Minería (Apex)</h1>
+        <div class="flex gap-2 w-[400px] justify-end">
+          <VaSelect 
+            v-model="selectedFilter" 
+            :options="periodOptions" 
+            preset="large" 
+            class="!w-32 notranslate"
+            teleported
+            :dropdown-props="{ class: 'notranslate', translate: 'no' }"
+            :class="selectedFilter === 'Semanal' ? '!w-62' : '!w-32' "
+          />
+
+          <VaSelect
+            v-if="selectedFilter === 'Mensual'"
+            v-model="selectedMonth"
+            :options="monthOptions"
+            value-by="value"
+            preset="large"
+            class="!w-32 notranslate"
+            :teleported="false"
+            :dropdown-props="{ class: 'notranslate', translate: 'no' }"
+            placeholder="Selecciona mes"
+          />
+
+          <VaButton size="medium" preset="primary" @click="exportAsExcel" class="w-32">
+            Exportar
+          </VaButton>
+        </div>
+      </VaCardTitle>
+
+      <VaCardContent class="flex flex-col md:flex-row md:items-center justify-between gap-5 h-full">
+        <section class="flex flex-col items-start w-full sm:w-1/3 md:w-2/5 lg:w-1/4 gap-4 md:gap-8 pl-4">
+          <div>
+            <p class="text-xl font-semibold">{{ formatMoney(totalEarningsUSD) }}</p>
+            <p class="whitespace-nowrap mt-2">Ingresos totales (USDT)</p>
+          </div>
+          <div>
+            <p v-if="averagePhs > 0" class="text-sm text-secondary">
+              Promedio PH/s este período: <b>{{ averagePhs.toFixed(2) }}</b>
+            </p>
+            <p v-if="averageBtcPrice > 0" class="text-sm text-secondary mt-1">
+              Promedio de tasa BTC: <b>{{ formatMoney(averageBtcPrice) }}</b>
+            </p>
+          </div>
+        </section>
+
+        <section class="flex flex-col w-full md:w-3/5 lg:w-3/4">
+          <ApexChart
+            ref="apexRef"
+            id="apexChart"
+            type="bar"
+            :height="dynamicHeight"
+            :options="chartOptions"
+            :series="chartSeries"
+          />
+          <div class="flex justify-between mt-4 text-sm text-secondary px-4">
+            <span>Total USDT: <b>{{ formatMoney(totalEarningsUSD) }}</b></span>
+            <span>Equivalente en BTC: <b>{{ totalEarningsBTC.toFixed(5) }} BTC</b></span>
+            <span>Fecha actual: <b>{{ new Date().toLocaleDateString('es-VE') }}</b></span>
+          </div>
+        </section>
+      </VaCardContent>
+    </VaCard>
+  </div>
+</template>
+
+<style>
+/* Extra safety: prevent Google Translate on Vuestic dropdowns */
+.vuestic-select-dropdown,
+.vuestic-select-dropdown * {
+  translate: no !important;
+}
+</style>
+
+
+<script lang="ts" setup>
+import { ref, computed, watch } from 'vue'
+import { VaCard, VaSelect, VaButton } from 'vuestic-ui'
+import ApexChart from 'vue3-apexcharts'
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
+import { formatMoney } from '../../data/charts/revenueChartData'
+
+const dynamicHeight = computed(() => {
+  const rows = chartData.value.length
+  return rows * 40 + 100    // 40px per bar + padding
+})
+
+interface RevenueData {
+  date: string
+  revenueUSD: number
+  avg_phs: number
+  active_readings: number
+  dailyBtcPrice: number
+  active_workers: number | null
+}
+
+// ----- Month/Year Selector -----
+const now = new Date()
+const currentMonth = now.getMonth() + 1
+const currentYear = now.getFullYear()
+const CUT_FACTOR = 0.78
+
+
+const monthYearOptions = Array.from({ length: 12 }, (_, i) => {
+  const monthNumber = String(i + 1).padStart(2, '0')
+  return `${currentYear}-${monthNumber}`
+})
+
+const selectedPeriod = ref<string>(monthYearOptions[currentMonth - 1])
+
+// ----- Month Selector for Mensual -----
+// Show month names as labels but keep numeric values for backend
+const monthNames = [
+  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+]
+const monthOptions = ref(
+  monthNames.map((name, i) => ({
+    label: name,
+    title: name, // some components use `title`
+    text: name,  // some variants use `text`
+    value: i + 1 // numeric value instead of string
+  }))
+)
+
+const selectedMonth = ref<number>(currentMonth) // default as number
+
+// ----- Filtros: Mensual / Semanal -----
+const periodOptions = ['Mensual', 'Semanal',]
+const selectedFilter = ref('Mensual')
+
+// ----- Chart Data -----
+const chartData = ref<RevenueData[]>([])
+const totalEarningsUSD = ref(0)
+const totalEarningsBTC = ref(0)
+const averagePhs = ref(0)
+// NUEVA VARIABLE
+const averageBtcPrice = ref(0)
+const btcPriceNow = ref(0)
+
+
+// add a ref to the ApexChart component
+const apexRef = ref<any>(null)
+
+
+// ----- Export to Excel -----
+const exportAsExcel = async () => {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    const sheet = workbook.addWorksheet('Revenue Report')
+
+    // Add headers
+    sheet.addRow(['Fecha', 'Ingresos (USDT)', 'BTC Producidos', 'Promedio de PH/s', 'Precio BTC (USD)', 'Máquinas activas'])
+
+    // Add data
+    chartData.value.forEach((d) => {
+      const btcProduced = d.dailyBtcPrice ? d.revenueUSD / d.dailyBtcPrice : 0
+      sheet.addRow([
+        d.date,
+        d.revenueUSD,
+        btcProduced,
+        d.avg_phs,
+        d.dailyBtcPrice,
+        d.active_workers ?? 0
+      ])
+    })
+
+    // Export chart as image (unchanged)
+    // Export chart as image (dynamic sizing)
+// Export chart as image (dynamic sizing with max cap)
+const chartComp = apexRef.value
+if (chartComp?.chart?.dataURI) {
+  const data = await chartComp.chart.dataURI()
+  const imgURI = data.imgURI || data
+  const base64 = imgURI.split(',')[1]
+  if (base64) {
+    const imageId = workbook.addImage({
+      base64,
+      extension: 'png',
+    })
+
+    // Determine image size based on chartData length
+    const numRows = chartData.value.length
+    const startRow = 2
+    let endRow: number
+
+    if (numRows < 10) {
+      // If few rows, stretch image proportionally
+      endRow = startRow + 10 // minimum height 10 rows
+    } else {
+      // If many rows, keep same as before (fixed size)
+      endRow = 45
+    }
+
+    const startCol = 7
+    const endCol = 21
+
+    sheet.addImage(imageId, {
+      tl: { col: startCol, row: startRow } as any,
+      br: { col: endCol, row: endRow } as any,
+      editAs: 'oneCell',
+    })
+  }
+}
+
+    // Add file creation date in A28
+    const creationRow = sheet.getRow(28)
+    creationRow.getCell(1).value = `Fecha de emisión: ${new Date().toLocaleDateString('es-VE')}`
+    // Set text bold
+    creationRow.getCell(1).font = { bold: true }
+    creationRow.commit()
+
+    // --- Add Totals / Average below Fecha de emisión ---
+    const totalUSDT = chartData.value.reduce((sum, d) => sum + d.revenueUSD, 0)
+    const totalBTC = chartData.value.reduce((sum, d) => sum + (d.revenueUSD / (d.dailyBtcPrice || 1)), 0)
+    const phValues = chartData.value.map(d => d.avg_phs).filter(v => v > 0)
+    const avgPh = phValues.length ? phValues.reduce((a,b)=>a+b,0)/phValues.length : 0
+
+    const totalRowStart = 29
+    // Total USDT (Bold)
+    const usdtCell = sheet.getRow(totalRowStart).getCell(1)
+    usdtCell.value = `Total USDT: ${totalUSDT.toFixed(2)}`
+    usdtCell.font = { bold: true }
+    sheet.getRow(totalRowStart).commit()
+
+    // Total BTC (Bold)
+    const btcCell = sheet.getRow(totalRowStart+1).getCell(1)
+    btcCell.value = `Total BTC: ${totalBTC.toFixed(8)}`
+    btcCell.font = { bold: true }
+    sheet.getRow(totalRowStart+1).commit()
+
+    // Promedio PH (Bold)
+    const phCell = sheet.getRow(totalRowStart+2).getCell(1)
+    phCell.value = `Promedio PH: ${avgPh.toFixed(2)}`
+    phCell.font = { bold: true }
+    sheet.getRow(totalRowStart+2).commit()
+
+    // NUEVO: Promedio Tasa BTC (Bold)
+    const btcPriceCell = sheet.getRow(totalRowStart+3).getCell(1)
+    btcPriceCell.value = `Promedio de tasa BTC: ${averageBtcPrice.value.toFixed(2)}`
+    btcPriceCell.font = { bold: true }
+    sheet.getRow(totalRowStart+3).commit()
+
+    // Save file
+    const buffer = await workbook.xlsx.writeBuffer()
+const todayStr = new Date().toISOString().slice(0,10) // YYYY-MM-DD
+const fileName = `Reporte-ingresos-braiins-${todayStr}.xlsx`
+
+saveAs(new Blob([buffer], { type: 'application/octet-stream' }), fileName)  } catch (err) {
+    console.error('❌ Failed to export Excel:', err)
+  }
+}
+
+
+// ----- Helper -----
+function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function normalizeUTCDate(dt: string): string {
+  // Keep only YYYY-MM-DD, avoid Date objects
+  return (dt || '').slice(0, 10)
+}
+
+// New helpers: produce local YYYY-MM-DD and compute Monday of current week
+function localYMD(d?: Date) {
+  const dt = d ? new Date(d.getTime()) : new Date()
+  const y = dt.getFullYear()
+  const m = String(dt.getMonth() + 1).padStart(2, '0')
+  const day = String(dt.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function getWeekStartMonday(date: Date) {
+  // getDay: 0 (Sun) .. 6 (Sat). We want Monday as start.
+  const day = date.getDay()
+  const diff = (day + 6) % 7 // days since Monday
+  const monday = new Date(date.getTime())
+  monday.setDate(date.getDate() - diff)
+  monday.setHours(0, 0, 0, 0)
+  return monday
+}
+
+
+// ----- Load Data (updated) -----
+const loadBraiinsData = async () => {
+  try {
+    const today = new Date()
+    const month = selectedMonth.value // now a number
+    const year = today.getFullYear() // optionally, add year selector later
+
+    const todayStr = localYMD(today)
+
+    const priceRes = await fetch('https://dev-sec.app/api/price-stats')
+    const btcPriceData = await priceRes.json()
+    const btcPrice = Number(btcPriceData.data?.price || 0)
+    btcPriceNow.value = btcPrice
+
+    const [monthRes, phsRes, priceMonthRes, activeWorkersRes] = await Promise.all([
+      fetch(`https://dev-sec.app/api/daily-revenue-history?month=${month}&year=${year}`),
+      fetch(`https://dev-sec.app/api/daily-phs-history?month=${month}&year=${year}`),
+      fetch(`https://dev-sec.app/api/price-stats/month?month=${month}&year=${year}`),
+      fetch(`https://dev-sec.app/api/daily-active-workers?month=${month}&year=${year}`)
+    ])
+
+    const revenueRaw: any[] = await monthRes.json()
+    const phsRaw: { day: string; avg_phs: number; active_readings: number }[] = await phsRes.json()
+    const priceMonthData = await priceMonthRes.json()
+    const activeWorkersRaw: { day: string; active_workers: number }[] = await activeWorkersRes.json()
+
+    // map data as before...
+    let mapped = revenueRaw.map(item => {
+      const date = (item.day || item.timestamp).slice(0,10)
+      const matchPhs = phsRaw.find(p => (p.day || '').slice(0,10) === date)
+      const matchPrice = priceMonthData.days.find((p: any) => (p.day || '').slice(0,10) === date)
+      const matchWorkers = activeWorkersRaw.find(w => (w.day || '').slice(0,10) === date)
+      
+      return {
+        date,
+        // 🔻 CUT ingresos (USDT)
+  revenueUSD:
+    ((Number(item.revenue_sat) / 1e8) *
+      (matchPrice?.price ?? btcPriceNow.value)) * CUT_FACTOR,
+
+  // 🔻 CUT PH/s
+  avg_phs: (matchPhs?.avg_phs ?? 0) * CUT_FACTOR,
+        active_readings: matchPhs?.active_readings ?? 0,
+        dailyBtcPrice: matchPrice?.price ?? btcPriceNow.value,
+        active_workers: matchWorkers?.active_workers ?? null
+      }
+    })
+    console.log('Loaded Braiins entry:', mapped)
+
+
+    mapped.sort((a,b) => a.date.localeCompare(b.date))
+
+    // Forward-fill active_workers
+    let nextKnownValue: number | null = null
+    for (let i = mapped.length - 1; i >= 0; i--) {
+      if (mapped[i].active_workers != null) nextKnownValue = mapped[i].active_workers
+      else if (nextKnownValue != null) mapped[i].active_workers = nextKnownValue
+      else mapped[i].active_workers = 0
+    }
+
+    let filtered: RevenueData[] = []
+
+    if (selectedFilter.value === 'Mensual') {
+      filtered = mapped.filter(d => {
+        const monthNum = parseLocalDate(d.date).getMonth() + 1
+        return monthNum === month
+      })
+    } else {
+      const weekStart = getWeekStartMonday(today)
+      const weekStartStr = localYMD(weekStart)
+      filtered = mapped.filter(d => d.date >= weekStartStr && d.date < todayStr)
+    }
+
+    chartData.value = filtered
+
+    totalEarningsUSD.value = filtered.reduce((sum,d)=>sum+d.revenueUSD,0)
+    totalEarningsBTC.value = Number(
+      filtered.reduce(
+        (sum, d) => sum + (d.revenueUSD / d.dailyBtcPrice),
+        0
+      ).toFixed(8)
+    )
+
+    const nonZeroPhs = filtered.filter(d=>d.avg_phs>0).map(d=>d.avg_phs)
+    averagePhs.value = nonZeroPhs.length ? nonZeroPhs.reduce((a,b)=>a+b,0)/nonZeroPhs.length : 0
+
+    // NUEVO: Cálculo del promedio de tasa BTC
+    const btcPrices = filtered.filter(d => d.dailyBtcPrice > 0).map(d => d.dailyBtcPrice)
+    averageBtcPrice.value = btcPrices.length ? btcPrices.reduce((a,b)=>a+b,0)/btcPrices.length : 0
+
+  } catch(err) {
+    console.error('❌ Failed to load Braiins data:', err)
+  }
+}
+
+
+const chartSeries = computed(() => [
+  {
+    name: 'Ingresos (USDT)',
+    data: chartData.value.map(d => d.revenueUSD)
+  }
+])
+
+
+// ----- Chart Options (tooltip updated) -----
+const chartOptions = computed(() => {
+  const maxRevenue = chartData.value.length
+    ? Math.max(...chartData.value.map(d => d.revenueUSD)) * 1.1
+    : 1
+
+
+  const categories = chartData.value.map(d => {
+      const btcProduced = (d.revenueUSD / d.dailyBtcPrice).toFixed(8)
+
+  if (selectedFilter.value === 'Semanal') {
+    const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+
+    return `${diasSemana[new Date(d.date).getDay()]} | BTC: ${btcProduced}`
+  } else {
+    return `${d.date} \n BTC: ${btcProduced}`
+  }
+})
+
+
+  return {
+    chart: {
+      toolbar: { show: false },
+      zoom: { enabled: false },
+      foreColor: '#6b7280'
+    },
+
+    // ✅ Put text INSIDE the bars
+    plotOptions: {
+      bar: {
+        horizontal: true,
+        columnWidth: '70%',
+        borderRadius: 4,
+        dataLabels: {
+          position: 'center',
+          orientation: 'horizontal' as const
+        }
+      }
+    },
+
+    // ✅ Data labels (inside bars)
+    dataLabels: {
+  enabled: true,
+  formatter: (value: number, opts: any) => {
+    const d = chartData.value[opts.dataPointIndex]
+    if (!d) return ''
+  const usdt = d.revenueUSD.toFixed(2)
+      const btc = (d.revenueUSD / d.dailyBtcPrice).toFixed(8)
+
+      // Combine USDT and BTC inside the bar, separated by |
+      return ` USDT/p: $ ${usdt}`},
+  
+    style: {
+      fontSize: '11px',
+      fontWeight: 600,
+      colors: ['#f0f0f0']
+    },
+    offsetY: 0,
+    offsetX: 0,
+  
+    background: {
+      enabled: false,
+    },
+    // Add custom class here
+    className: 'vertical-bar-label'
+    },
+
+
+
+
+    xaxis: {
+  categories: chartData.value.map(d => d.date),
+
+  // ---- FORCE EXACT TICK INCREMENTS OF 2000 ----
+  min: 0,
+  max: Math.ceil(maxRevenue / 2000) * 2000,
+  tickAmount: Math.ceil(maxRevenue / 2000),
+  forceNiceScale: false, // prevents Apex from overriding your increments
+
+  labels: {
+    formatter: (val: number) => val.toLocaleString('de-DE'),
+    style: { fontSize: '11px' }
+  },
+
+  title: {
+    text: 'USDT/p'
+  }
+},
+
+
+
+
+    yaxis: {
+      title: { text: 'Fecha' },
+      min: 0,
+      max: maxRevenue,
+      
+      labels: {
+        formatter: (val: number) =>
+          `${val.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+      }
+    },
+
+    tooltip: {
+      custom: ({ dataPointIndex }: any) => {
+        const d = chartData.value[dataPointIndex]
+        if (!d) return ''
+
+        return `<div style="padding:8px;">
+          <b>${d.date}</b><br>
+          Ingresos: <b>$${d.revenueUSD.toLocaleString(undefined, {
+            maximumFractionDigits: 2
+          })}</b><br>
+          Promedio de PH/s: <b>${d.avg_phs?.toFixed(2) || 0}</b><br>
+          Máquinas activas: <b>${d.active_workers ?? 0}</b><br>
+          Precio BTC: <b>$${d.dailyBtcPrice.toLocaleString(undefined, {
+            minimumFractionDigits: 3,
+            maximumFractionDigits: 3
+          })}</b><br>
+        </div>`
+      }
+    },
+
+    colors: ['#2563EB'],
+    legend: { show: false }
+  }
+})
+
+
+
+// ----- Watchers -----
+watch(selectedFilter, (newVal) => {
+  if (newVal === 'Semanal') {
+    // reset month to current (number)
+    const now = new Date()
+    selectedMonth.value = now.getMonth() + 1
+  }
+  loadBraiinsData()
+}, { immediate: true })
+watch(selectedMonth, () => loadBraiinsData())
+
+</script>

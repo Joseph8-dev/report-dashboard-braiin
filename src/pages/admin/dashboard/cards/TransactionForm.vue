@@ -46,7 +46,7 @@
         <!-- MONTO USDT -->
         <VaInput
           v-model.number="formData.monto"
-          label="Monto (USDT)"
+          label="Monto (BTC)"
           type="number"
           :rules="montoRules"
           step="0.01"

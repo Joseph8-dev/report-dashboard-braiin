@@ -98,7 +98,7 @@
 
         <VaInput
           v-model.number="formData.monto"
-          label="Monto (USDT)"
+          label="Monto (BTC)"
           type="number"
           step="0.01"
           required
@@ -157,7 +157,7 @@ const columns = [
   { key: "proveedor", label: "Proveedor" },
   { key: "wallet", label: "Wallet" },
   { key: "red", label: "Red" },
-  { key: "monto", label: "Monto (USDT)" },
+  { key: "monto", label: "Monto (BTC)" },
   { key: "txid", label: "TxID" }, 
   { key: "concepto", label: "Concepto" },
   { key: "timestamp", label: "Fecha" },
@@ -304,7 +304,7 @@ const exportAsExcel = async () => {
     const sheet = workbook.addWorksheet("Retiros");
 
     // Headers
-    sheet.addRow(["Fecha", "Proveedor", "Wallet", "Red", "Monto (USDT)", "TxID", "Concepto"]);
+    sheet.addRow(["Fecha", "Proveedor", "Wallet", "Red", "Monto (BTC)", "TxID", "Concepto"]);
 
     // Data
     entries.value.forEach((d) => {

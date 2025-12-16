@@ -30,16 +30,16 @@ const pageMocks: {
     },
   },
   {
-    name: 'Projects',
-    url: '/projects',
+    name: 'dashboard-bitcoin',
+    url: '/dashboard-bitcoin',
     apiMocks: {
       '/projects': getProjectsStub,
       '/users': getUsersStub,
     },
   },
   {
-    name: 'Payments',
-    url: '/payments',
+    name: 'dashboard-grupo-dms',
+    url: '/dashboard-grupo-dms',
   },
   {
     name: 'Payment Methods',
