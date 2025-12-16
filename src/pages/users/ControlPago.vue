@@ -47,12 +47,20 @@ const usdtConverted = computed(() => {
 
 // ==================== SAVE FORM ====================
 const saveForm = async () => {
+
+  // 🔹 Freeze USDT value at submit time
+    const monto_usdt = Number(
+      usdtConverted.value.toFixed(2)
+    )
+
+    
   try {
     const payload = {
       proveedor: formData.proveedor,
       wallet: formData.wallet,
       red: formData.red,
       monto: formData.monto,
+      monto_usdt,
       txid: formData.txid,
       concepto: formData.concepto,
     }

@@ -50,6 +50,12 @@
           />
         </template>
 
+        <template #cell(monto_usdt)="{ value }">
+        <span>
+            {{ Number(value).toLocaleString('es-ES') }}
+          </span>
+        </template>
+
       </VaDataTable>
 
       <div v-if="entries.length > pageSize" class="flex justify-center mt-4">
@@ -139,6 +145,7 @@ interface Entry {
   wallet: string;
   red: string;
   monto: number;
+  monto_usdt?: number;
   txid: string;
   timestamp: string;
   concepto: string;
@@ -158,6 +165,7 @@ const columns = [
   { key: "wallet", label: "Wallet" },
   { key: "red", label: "Red" },
   { key: "monto", label: "Monto (BTC)" },
+  { key: "monto_usdt", label: "Monto (USDT)" },
   { key: "txid", label: "TxID" }, 
   { key: "concepto", label: "Concepto" },
   { key: "timestamp", label: "Fecha" },
@@ -206,6 +214,7 @@ const fetchTransactions = async () => {
       wallet: item.wallet,
       red: item.red,
       monto: item.monto,
+      monto_usdt: Number(item.monto_usdt ?? 0), // ✅ NEW
       txid: item.tx_id || item.txid || "N/A", // Usar || para manejar "" (cadenas vacías)
       concepto: item.concepto, 
       timestamp: item.date ?? "",
