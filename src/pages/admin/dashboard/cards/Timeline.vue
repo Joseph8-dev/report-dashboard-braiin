@@ -322,7 +322,7 @@ const exportAsExcel = async () => {
 
     // Add totals row
     const totalUSDT = entries.value.reduce((sum, d) => sum + Number(d.monto || 0), 0)
-    const totalRow = sheet.addRow([`Total USDT: ${totalUSDT.toFixed(2)}`]);
+    const totalRow = sheet.addRow([`Total BTC: ${totalUSDT.toFixed(2)}`]);
     totalRow.font = { bold: true };
 
     // Save file
