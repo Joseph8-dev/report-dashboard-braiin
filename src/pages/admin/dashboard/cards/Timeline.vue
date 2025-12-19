@@ -106,7 +106,7 @@
           v-model.number="formData.monto"
           label="Monto (BTC)"
           type="number"
-          step="any"
+          step="0.01"
           required
         />
 

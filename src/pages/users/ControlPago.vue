@@ -10,7 +10,7 @@ const formData = reactive({
   proveedor: "",
   wallet: "",
   red: "",
-  monto: 0,      // BTC amount
+  monto: "",       // BTC as string
   txid: "",
   concepto: "",
 })
@@ -20,7 +20,7 @@ const redOptions = [
   { text: "ERC20", value: "ERC20" },
 ]
 
-// ==================== BTC PRICE (REUSED FROM DASHBOARD) ====================
+// ==================== BTC PRICE ====================
 const btcPriceToday = ref<number>(0)
 
 async function fetchBTCPrice(): Promise<number> {
@@ -39,27 +39,47 @@ onMounted(async () => {
   btcPriceToday.value = await fetchBTCPrice()
 })
 
-// ==================== LIVE CONVERSION BTC → USDT ====================
+// ==================== PARSED BTC ====================
+const parsedBTC = computed(() => {
+  if (!formData.monto) return 0
+  const value = Number(formData.monto.replace(',', '.'))
+  return isNaN(value) ? 0 : value
+})
+
+// ==================== LIVE BTC → USDT ====================
 const usdtConverted = computed(() => {
-  if (!btcPriceToday.value || !formData.monto) return 0
-  return formData.monto * btcPriceToday.value
+  if (!btcPriceToday.value || !parsedBTC.value) return 0
+  return parsedBTC.value * btcPriceToday.value
 })
 
 // ==================== SAVE FORM ====================
 const saveForm = async () => {
+  const btcRegex = /^[0-9]*[.,]?[0-9]+$/
 
-  // 🔹 Freeze USDT value at submit time
-    const monto_usdt = Number(
-      usdtConverted.value.toFixed(2)
-    )
+  if (!btcRegex.test(formData.monto)) {
+    notify({
+      message: "El monto BTC solo puede contener números y decimales",
+      color: "danger",
+    })
+    return
+  }
 
-    
+  if (!parsedBTC.value || parsedBTC.value <= 0) {
+    notify({
+      message: "El monto BTC debe ser mayor que 0",
+      color: "danger",
+    })
+    return
+  }
+
+  const monto_usdt = Number(usdtConverted.value.toFixed(2))
+
   try {
     const payload = {
       proveedor: formData.proveedor,
       wallet: formData.wallet,
       red: formData.red,
-      monto: formData.monto,
+      monto: parsedBTC.value,
       monto_usdt,
       txid: formData.txid,
       concepto: formData.concepto,
@@ -73,7 +93,10 @@ const saveForm = async () => {
 
     const data = await res.json()
     if (!data.success) {
-      console.error("Error saving entry:", data)
+      notify({
+        message: "Error al guardar el registro",
+        color: "danger",
+      })
       return
     }
 
@@ -81,7 +104,7 @@ const saveForm = async () => {
     formData.proveedor = ""
     formData.wallet = ""
     formData.red = ""
-    formData.monto = 0
+    formData.monto = ""
     formData.txid = ""
     formData.concepto = ""
 
@@ -102,7 +125,7 @@ const saveForm = async () => {
 <template>
   <h1 class="page-title">Agregar Registro</h1>
 
-  <!-- ==================== BTC PRICE & CONVERSION CARD ==================== -->
+  <!-- ==================== BTC PRICE & CONVERSION ==================== -->
   <VaCard class="mb-4">
     <VaCardContent class="flex flex-col gap-1">
       <p class="text-sm text-secondary font-semibold">
@@ -114,11 +137,13 @@ const saveForm = async () => {
         <span v-if="btcPriceToday">
           {{ btcPriceToday.toLocaleString() }} USDT
         </span>
-        <span v-else> Cargando... </span>
+        <span v-else>
+          Cargando...
+        </span>
       </p>
 
-      <p v-if="formData.monto > 0" class="text-sm mt-2">
-        <b>{{ formData.monto }}</b> BTC =
+      <p v-if="parsedBTC > 0" class="text-sm mt-2">
+        <b>{{ parsedBTC }}</b> BTC =
         <b>
           {{ usdtConverted.toLocaleString(undefined, { maximumFractionDigits: 2 }) }}
         </b> USDT
@@ -155,10 +180,11 @@ const saveForm = async () => {
         />
 
         <VaInput
-          v-model.number="formData.monto"
+          v-model="formData.monto"
           label="Monto (BTC)"
-          type="number"
-          step="0.00000001"
+          type="text"
+          inputmode="decimal"
+          placeholder="0.00000000"
           required
         />
 
