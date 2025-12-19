@@ -51,11 +51,10 @@
         </template>
 
         <template #cell(monto_usdt)="{ value }">
-        <span>
-            {{ Number(value).toLocaleString('es-ES') }}
+          <span>
+            {{ Number(value).toLocaleString('es-ES', { minimumFractionDigits: 2 }) }}
           </span>
         </template>
-
       </VaDataTable>
 
       <div v-if="entries.length > pageSize" class="flex justify-center mt-4">
@@ -106,7 +105,7 @@
           v-model.number="formData.monto"
           label="Monto (BTC)"
           type="number"
-          step="0.01"
+          step="0.00000001"
           required
         />
 
@@ -140,7 +139,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
 interface Entry {
-  id: number; // NUEVO: Identificador necesario para la eliminación
+  id: number;
   proveedor: string;
   wallet: string;
   red: string;
@@ -159,7 +158,6 @@ const showAddModal = ref(false);
 const searchMonth = ref(new Date().getMonth() + 1);
 const searchYear = ref(new Date().getFullYear());
 
-/* TABLE COLUMNS - Incluye la columna de acciones */
 const columns = [
   { key: "proveedor", label: "Proveedor" },
   { key: "wallet", label: "Wallet" },
@@ -169,7 +167,7 @@ const columns = [
   { key: "txid", label: "TxID" }, 
   { key: "concepto", label: "Concepto" },
   { key: "timestamp", label: "Fecha" },
-  { key: "acciones", label: "" }, // Columna de acciones
+  { key: "acciones", label: "" },
 ];
 
 const monthOptions = [
@@ -201,97 +199,59 @@ const formData = reactive({
   concepto: "",
 });
 
-/* FETCH DATA FROM API */
 const fetchTransactions = async () => {
-  try {
-    const url = `https://dev-sec.app/api/report-transactions-history?month=${searchMonth.value}&year=${searchYear.value}`;
-    const res = await fetch(url);
-    const data = await res.json();
+  const url = `https://dev-sec.app/api/report-transactions-history?month=${searchMonth.value}&year=${searchYear.value}`;
+  const res = await fetch(url);
+  const data = await res.json();
 
-    entries.value = data.map((item: any) => ({
-      id: item.id, // Mapear el ID
-      proveedor: item.name_prov,
-      wallet: item.wallet,
-      red: item.red,
-      monto: item.monto,
-      monto_usdt: Number(item.monto_usdt ?? 0), // ✅ NEW
-      txid: item.tx_id || item.txid || "N/A", // Usar || para manejar "" (cadenas vacías)
-      concepto: item.concepto, 
-      timestamp: item.date ?? "",
-    }));
+  entries.value = data.map((item: any) => ({
+    id: item.id,
+    proveedor: item.name_prov,
+    wallet: item.wallet,
+    red: item.red,
+    monto: Number(item.monto),
+    monto_usdt: Number(item.monto_usdt ?? 0),
+    txid: item.tx_id || item.txid || "N/A",
+    concepto: item.concepto,
+    timestamp: item.date ?? "",
+  }));
 
-    currentPage.value = 1;
-  } catch (error) {
-    console.error("Failed loading transactions:", error);
-    entries.value = [];
-  }
+  currentPage.value = 1;
 };
 
-onMounted(() => fetchTransactions());
+onMounted(fetchTransactions);
 watch(searchMonth, fetchTransactions);
 
-/* ADD ENTRY MANUALLY */
 const addEntry = async () => {
-  try {
-    const payload = {
-      proveedor: formData.proveedor,
-      wallet: formData.wallet,
-      red: formData.red,
-      monto: formData.monto,
-      txid: formData.txid,
-    };
+  const payload = {
+    proveedor: formData.proveedor,
+    wallet: formData.wallet,
+    red: formData.red,
+    monto: formData.monto,
+    txid: formData.txid,
+  };
 
-    const res = await fetch("https://dev-sec.app/api/report-transactions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  await fetch("https://dev-sec.app/api/report-transactions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 
-    const data = await res.json();
-    if (!data.success) return console.error("Error saving entry:", data);
-
-    await fetchTransactions();
-
-    // Reset form
-    formData.proveedor = "";
-    formData.wallet = "";
-    formData.red = "";
-    formData.monto = 0;
-    formData.txid = "";
-
-    showAddModal.value = false;
-    currentPage.value = 1;
-  } catch (e) {
-    console.error("Error adding entry:", e);
-  }
+  await fetchTransactions();
+  Object.assign(formData, { proveedor: "", wallet: "", red: "", monto: 0, txid: "" });
+  showAddModal.value = false;
 };
 
-/* DELETE ENTRY */
 const deleteEntry = async (entry: Entry) => {
-  if (!confirm(`¿Estás seguro de eliminar el retiro de ${entry.proveedor} (ID: ${entry.id})? Esta acción no se puede deshacer.`)) return;
+  if (!confirm(`¿Eliminar retiro ID ${entry.id}?`)) return;
 
-  try {
-    const res = await fetch(`https://dev-sec.app/api/report-transactions/${entry.id}`, {
-      method: 'DELETE',
-    });
+  await fetch(`https://dev-sec.app/api/report-transactions/${entry.id}`, {
+    method: "DELETE",
+  });
 
-    if (res.ok) {
-      // Eliminar de la lista local para actualizar la tabla inmediatamente
-      entries.value = entries.value.filter(e => e.id !== entry.id);
-      // Ajustar la página actual si es necesario
-      currentPage.value = Math.min(currentPage.value, totalPages.value || 1);
-    } else {
-      const errData = await res.json();
-      console.error("Error deleting:", errData);
-      alert(`Error al eliminar el registro: ${errData.error || 'Server error'}`);
-    }
-  } catch (e) {
-    console.error("Network error deleting entry:", e);
-    alert("Ocurrió un error de red al intentar eliminar el registro.");
-  }
+  entries.value = entries.value.filter(e => e.id !== entry.id);
 };
 
-/* PAGINATION */
 const totalPages = computed(() => Math.ceil(entries.value.length / pageSize));
 
 const pageOptions = computed(() =>
@@ -308,31 +268,48 @@ const pagedEntries = computed(() => {
 
 /* EXPORT TO EXCEL */
 const exportAsExcel = async () => {
-  try {
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Retiros");
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Retiros");
 
-    // Headers
-    sheet.addRow(["Fecha", "Proveedor", "Wallet", "Red", "Monto (BTC)", "TxID", "Concepto"]);
+  sheet.addRow([
+    "Fecha",
+    "Proveedor",
+    "Wallet",
+    "Red",
+    "Monto (BTC)",
+    "Monto (USDT)",
+    "TxID",
+    "Concepto",
+  ]);
 
-    // Data
-    entries.value.forEach((d) => {
-      sheet.addRow([d.timestamp, d.proveedor, d.wallet, d.red, d.monto, d.txid, d.concepto]);
-    });
+  entries.value.forEach(d => {
+    sheet.addRow([
+      d.timestamp,
+      d.proveedor,
+      d.wallet,
+      d.red,
+      d.monto,
+      d.monto_usdt,
+      d.txid,
+      d.concepto,
+    ]);
+  });
 
-    // Add totals row
-    const totalUSDT = entries.value.reduce((sum, d) => sum + Number(d.monto || 0), 0)
-    const totalRow = sheet.addRow([`Total BTC: ${totalUSDT.toFixed(2)}`]);
-    totalRow.font = { bold: true };
+  const totalBTC = entries.value.reduce((s, d) => s + Number(d.monto || 0), 0);
+  const totalUSDT = entries.value.reduce((s, d) => s + Number(d.monto_usdt || 0), 0);
 
-    // Save file
-    const buffer = await workbook.xlsx.writeBuffer();
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const fileName = `Reporte-retiros-${todayStr}.xlsx`;
-    saveAs(new Blob([buffer], { type: "application/octet-stream" }), fileName);
-  } catch (err) {
-    console.error("❌ Failed to export Excel:", err);
-  }
+  const totalRow = sheet.addRow([
+    "TOTALES",
+    "",
+    "",
+    "",
+    totalBTC,
+    totalUSDT.toFixed(2),
+  ]);
+  totalRow.font = { bold: true };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  saveAs(new Blob([buffer]), `Reporte-retiros-${new Date().toISOString().slice(0, 10)}.xlsx`);
 };
 </script>
 
@@ -342,9 +319,8 @@ const exportAsExcel = async () => {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 15px;
 }
-/* Estilos para evitar el salto de línea en las celdas de Wallet y TxID, forzando el scroll horizontal */
 .va-data-table td:nth-child(2),
-.va-data-table td:nth-child(5) {
+.va-data-table td:nth-child(6) {
   white-space: nowrap;
 }
 </style>
