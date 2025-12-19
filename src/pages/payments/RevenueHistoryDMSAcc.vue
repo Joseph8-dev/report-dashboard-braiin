@@ -249,7 +249,7 @@ if (chartComp?.chart?.dataURI) {
     // Save file
     const buffer = await workbook.xlsx.writeBuffer()
 const todayStr = new Date().toISOString().slice(0,10) // YYYY-MM-DD
-const fileName = `Reporte-ingresos-braiins-${todayStr}.xlsx`
+const fileName = `Reporte-ingresos-braiins-DMS-${todayStr}.xlsx`
 
 saveAs(new Blob([buffer], { type: 'application/octet-stream' }), fileName)  } catch (err) {
     console.error('❌ Failed to export Excel:', err)
